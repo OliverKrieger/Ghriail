@@ -1,7 +1,7 @@
 import os
 import json
 
-from Scripts.utils.paths import unreal_source_dir, unreal_uproject_fpath
+from Scripts.utils.paths import unreal_source_dir, unreal_uproject_fpath, unreal_project_buildcs_fpath
 
 def request_module_create():
     module_name = input("Please enter module name: ")
@@ -10,7 +10,7 @@ def request_module_create():
     create_module(module_name, module_path)
     write_build_file(module_name, module_path)
     write_module_implementation_files(module_name, module_path)
-    include_module_in_uproject(module_name, module_path)
+    include_module_in_uproject(module_name)
 
 def create_module(module_name:str, module_path:str):
     if os.path.exists(module_path):
@@ -55,7 +55,7 @@ def write_module_implementation_files(module_name:str, module_path:str):
     )
     f.close()
 
-def include_module_in_uproject(module_name:str, module_path:str):
+def include_module_in_uproject(module_name:str):
     f = open(unreal_uproject_fpath, "r")
     lines:list[str] = f.readlines()
     fstr:str = ""
@@ -71,3 +71,20 @@ def include_module_in_uproject(module_name:str, module_path:str):
     )
     with open(unreal_uproject_fpath, 'w') as fuproj:
         json.dump(fjson, fuproj)
+
+def include_module_in_project_build(module_name:str):
+    f = open(unreal_project_buildcs_fpath, "r+")
+    lines:list[str] = f.readlines()
+    fstr:str = ""
+    for line in lines:
+        if "PublicDependencyModuleNames.AddRange(new string[] {" in line:
+            line_split = line.split("{")
+            line_start = line_split[0]
+            line_split = line_split[1].split("}")
+            line_mid = line_split[0]
+            line_end = line_split[1]
+            line_mid = line_mid+", "+module_name
+            line = line_start+"{"+line_mid+"}"+line_end
+        fstr += line
+    f.write(fstr)
+    f.close()
