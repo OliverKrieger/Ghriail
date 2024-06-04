@@ -1,21 +1,22 @@
 import os
 import json
+import shutil
 
 from Scripts.utils.paths import unreal_source_dir, unreal_uproject_fpath, unreal_project_buildcs_fpath
 
 def request_module_create():
-    module_name = input("Please enter module name: ")
+    module_name = str(input("Please enter module name: "))
     module_path = os.path.join(unreal_source_dir, module_name)
 
-    create_module(module_name, module_path)
+    create_module_folders(module_path)
     write_build_file(module_name, module_path)
     write_module_implementation_files(module_name, module_path)
     include_module_in_uproject(module_name)
     include_module_in_project_build(module_name)
 
-def create_module(module_name:str, module_path:str):
+def create_module_folders(module_path:str):
     if os.path.exists(module_path):
-        os.rmdir(module_path)
+        shutil.rmtree(module_path)
     
     os.makedirs(module_path)
     os.makedirs(os.path.join(module_path, "Prviate"))
@@ -29,11 +30,11 @@ def write_build_file(module_name:str, module_path:str):
         'using UnrealBuildTool;\n'+
         '\n'+
         'public class '+module_name+': ModuleRules'+
-        '{'+
+        '{\n'+
         '\tpublic '+module_name+'(ReadOnlyTargetRules Target) : base(Target)'+
-        '\t{'+
-        '\t\tPrivateDependencyModuleNames.AddRange(new string[] {"Core", "CoreUObject", "Engine"});'+
-        '\t}'+
+        '\t{\n'+
+        '\t\tPrivateDependencyModuleNames.AddRange(new string[] {"Core", "CoreUObject", "Engine"});\n'+
+        '\t}\n'+
         '}'
     )
     f.close()
@@ -45,7 +46,7 @@ def write_module_implementation_files(module_name:str, module_path:str):
     module_impl_cpp_path:str = os.path.join(module_path, "Prviate", module_impl_cpp_fname)
 
     f = open(module_impl_h_path, "w")
-    f.write()
+    f.write("")
     f.close()
 
     f = open(module_impl_cpp_path, "w")
@@ -70,11 +71,13 @@ def include_module_in_uproject(module_name:str):
             "Type":"Runtime"
         }
     )
-    with open(unreal_uproject_fpath, 'w') as fuproj:
-        json.dump(fjson, fuproj)
+
+    with open(unreal_uproject_fpath, 'w') as f:
+        f.write(json.dumps(fjson, indent=4))
+    f.close()
 
 def include_module_in_project_build(module_name:str):
-    f = open(unreal_project_buildcs_fpath, "r+")
+    f = open(unreal_project_buildcs_fpath, "r")
     lines:list[str] = f.readlines()
     fstr:str = ""
     for line in lines:
@@ -84,8 +87,11 @@ def include_module_in_project_build(module_name:str):
             line_split = line_split[1].split("}")
             line_mid = line_split[0]
             line_end = line_split[1]
-            line_mid = line_mid+", "+module_name
-            line = line_start+"{"+line_mid+"}"+line_end
+            line_mid = line_mid+', "'+module_name+'"'
+            line = line_start+"{"+line_mid+" }"+line_end
         fstr += line
-    f.write(fstr)
+    f.close()
+    
+    with open(unreal_project_buildcs_fpath, 'w') as f:
+        f.write(fstr)
     f.close()

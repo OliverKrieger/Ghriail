@@ -2,7 +2,7 @@ from Scripts.creation.create_module import request_module_create
 
 def select_option():
     print("1 - create new module")
-    selected_option = input("Selected Option:")
+    selected_option = int(input("Selected Option:"))
 
     match selected_option:
         case 1:
