@@ -11,6 +11,7 @@ def request_module_create():
     write_build_file(module_name, module_path)
     write_module_implementation_files(module_name, module_path)
     include_module_in_uproject(module_name)
+    include_module_in_project_build(module_name)
 
 def create_module(module_name:str, module_path:str):
     if os.path.exists(module_path):
