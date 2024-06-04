@@ -1,0 +1,3 @@
+from Scripts.creation.create_module import request_module_create
+
+request_module_create()
