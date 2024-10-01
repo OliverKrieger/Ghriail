@@ -1,5 +1,5 @@
 import os
-from .utils import find_file_with_ext, get_project_name
+from .path_utils import find_file_with_ext, get_project_name
 
 working_dir = os.getcwd()
 project_name = get_project_name(working_dir)

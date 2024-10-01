@@ -1,3 +1,12 @@
+#include "Pathfinding.h"
 #include "Modules/ModuleManager.h"
 
-IMPLEMENT_MODULE(FDefaultModuleImpl, Pathfinding);
+IMPLEMENT_MODULE(FPathfinding, Pathfinding);
+void FPathfinding::StartupModule()
+{
+
+}
+void FPathfinding::ShutdownModule()
+{
+
+}

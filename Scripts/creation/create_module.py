@@ -1,12 +1,25 @@
 import os
 import json
-import shutil
 
-from Scripts.utils.paths import unreal_source_dir, unreal_uproject_fpath, unreal_project_buildcs_fpath
+
+from Scripts.utils.paths import unreal_source_dir, unreal_uproject_fpath, unreal_project_buildcs_fpath, project_name
+from Scripts.utils.utils import load_uproject_contents, does_module_path_exist, does_module_exist_in_project_build, does_module_exist_in_uproject
 
 def request_module_create():
     module_name = str(input("Please enter module name: "))
     module_path = os.path.join(unreal_source_dir, module_name)
+    
+    if does_module_path_exist(module_name):
+        print("ERROR - module folder already exists!")
+        return
+
+    if does_module_exist_in_project_build(module_name):
+        print("ERROR - module already exists in Project "+project_name+" build file!")
+        return
+
+    if does_module_exist_in_uproject(module_name):
+        print("ERROR - module already exists in UProject file!")
+        return
 
     create_module_folders(module_path)
     write_build_file(module_name, module_path)
@@ -15,9 +28,6 @@ def request_module_create():
     include_module_in_project_build(module_name)
 
 def create_module_folders(module_path:str):
-    if os.path.exists(module_path):
-        shutil.rmtree(module_path)
-    
     os.makedirs(module_path)
     os.makedirs(os.path.join(module_path, "Prviate"))
     os.makedirs(os.path.join(module_path, "Public"))
@@ -46,29 +56,46 @@ def write_module_implementation_files(module_name:str, module_path:str):
     module_impl_cpp_path:str = os.path.join(module_path, "Prviate", module_impl_cpp_fname)
 
     f = open(module_impl_h_path, "w")
-    f.write("")
+    f.write(
+        '#pragma once'
+        '\n'
+        '#include "CoreMinimal.h"\n'
+        '#include "Modules/ModuleManager.h"\n'
+        '\n'
+        'class F'+module_name+' : public IModuleInterface\n'
+        '{\n'
+        'public:\n'
+        '\tvirtual void StartupModule() override;\n'
+        '\tvirtual void ShutdownModule() override;\n'
+        '};'
+    )
     f.close()
 
     f = open(module_impl_cpp_path, "w")
     f.write(
+        '#include "'+module_name+'.h"\n'
         '#include "Modules/ModuleManager.h"\n'
         '\n'
-        'IMPLEMENT_MODULE(FDefaultModuleImpl, '+module_name+');'
+        'IMPLEMENT_MODULE(F'+module_name+', '+module_name+');'
+        '\n'
+        'void F'+module_name+'::StartupModule()\n'
+        '{\n'
+        '\n'
+        '}\n'
+        'void F'+module_name+'::ShutdownModule()\n'
+        '{\n'
+        '\n'
+        '}\n'
     )
     f.close()
 
 def include_module_in_uproject(module_name:str):
-    f = open(unreal_uproject_fpath, "r")
-    lines:list[str] = f.readlines()
-    fstr:str = ""
-    for line in lines:
-        fstr += line
-    fjson:dict = json.loads(fstr)
-    f.close()
+    fjson:dict = load_uproject_contents()
     fjson["Modules"].append(
         {
             "Name":module_name,
-            "Type":"Runtime"
+            "Type":"Runtime",
+            "LoadingPhase": "Default"
         }
     )
 
