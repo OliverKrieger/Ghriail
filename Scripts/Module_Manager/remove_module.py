@@ -1,9 +1,9 @@
 import os
 import shutil
-import json
 
-from Scripts.utils.paths import unreal_source_dir, unreal_project_buildcs_fpath, unreal_uproject_fpath
-from Scripts.utils.utils import does_module_exist_in_project_build, does_module_exist_in_uproject, does_module_path_exist, load_uproject_contents, write_uproject_contents
+from Scripts.Utils.paths import unreal_source_dir, unreal_project_buildcs_fpath
+from Scripts.Utils.utils import load_uproject_contents, write_uproject_contents
+from .utility_module import does_module_exist_in_project_build, does_module_exist_in_uproject, does_module_path_exist
 
 def request_module_remove():
     module_name = str(input("Please enter module name: "))

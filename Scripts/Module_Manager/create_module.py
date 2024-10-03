@@ -1,9 +1,9 @@
 import os
 import json
 
-
-from Scripts.utils.paths import unreal_source_dir, unreal_uproject_fpath, unreal_project_buildcs_fpath, project_name
-from Scripts.utils.utils import load_uproject_contents, does_module_path_exist, does_module_exist_in_project_build, does_module_exist_in_uproject
+from Scripts.Utils.paths import unreal_source_dir, unreal_uproject_fpath, unreal_project_buildcs_fpath, project_name
+from Scripts.Utils.utils import load_uproject_contents
+from .utility_module import does_module_path_exist, does_module_exist_in_project_build, does_module_exist_in_uproject
 
 def request_module_create():
     module_name = str(input("Please enter module name: "))
