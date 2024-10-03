@@ -4,7 +4,7 @@ from .paths import unreal_uproject_fpath
 
 def load_uproject_contents() -> dict:
     f = open(unreal_uproject_fpath, "r")
-    fjson:dict = json.loads(f)
+    fjson:dict = json.load(f)
     f.close()
     return fjson
 

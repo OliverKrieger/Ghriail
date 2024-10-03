@@ -11,16 +11,19 @@ def request_module_remove():
 
     if does_module_path_exist(module_path):
         remove_module_contents(module_path)
+        print("Module "+module_name+" successfully removed from contents")
     else:
         print("WARNING - module contents did not exist!")
 
     if does_module_exist_in_project_build(module_name):
         remove_from_project_build(module_name)
+        print("Module "+module_name+" successfully removed from build file")
     else:
         print("WARNING - module did not exist in project build file!")
 
     if does_module_exist_in_uproject(module_name):
         remove_from_uproject(module_name)
+        print("Module "+module_name+" successfully removed from uproject file")
     else:
         print("WARNING - module did not exist in uproject file!")
 

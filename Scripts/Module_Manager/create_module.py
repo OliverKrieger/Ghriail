@@ -50,9 +50,9 @@ def write_build_file(module_name:str, module_path:str):
     f.close()
 
 def write_module_implementation_files(module_name:str, module_path:str):
-    module_impl_h_fname:str = module_name+"Module.h"
+    module_impl_h_fname:str = module_name+".h"
     module_impl_h_path:str = os.path.join(module_path, "Public", module_impl_h_fname)
-    module_impl_cpp_fname:str = module_name+"Module.cpp"
+    module_impl_cpp_fname:str = module_name+".cpp"
     module_impl_cpp_path:str = os.path.join(module_path, "Prviate", module_impl_cpp_fname)
 
     f = open(module_impl_h_path, "w")
