@@ -1,9 +1,11 @@
 from .remove_compiled import remove_compiled
-from Scripts.Utils.paths import unreal_uproject_fpath, engine_path, engine_version
+from .regenerate_solution import regenerate_solution
+from vs_build_project import build_project
+
 
 def request_regenerate_project_files():
     print("Beginning regeneration...")
-    # remove_compiled()
-    print("Engine Version: ", engine_version)
-    print("Engine Path: ", engine_path)
+    remove_compiled()
+    regenerate_solution()
+    build_project()
     print("Project regeneration complete")

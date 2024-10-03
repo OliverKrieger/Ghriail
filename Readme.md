@@ -8,6 +8,6 @@ The script runner is at the top of the root to make sure that the os.getcwd() wo
 
 ### Pathing
 
-Most of the paths should be automatically recognised from the current working directory of the project.
+All project related paths will be setup automatically.
 
-However, as the engine location could be at a different path, make sure to `configure` the path with your `engine location`.
+However, `paths_external` is for the user to configure for the right locations.

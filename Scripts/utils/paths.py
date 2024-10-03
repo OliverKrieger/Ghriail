@@ -15,3 +15,4 @@ unreal_sln_fpath = find_file_with_ext(working_dir, ".sln")
 
 engine_version = find_engine_version(unreal_uproject_fpath)
 engine_path = find_engine_path(engine_version)
+engine_build_tool_fpath = os.path.join(engine_path, "Engine", "Binaries", "DotNET", "UnrealBuildTool", "UnrealBuildTool.exe")
