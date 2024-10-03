@@ -15,6 +15,6 @@ def remove_compiled():
         print("WARNING - Binaries folder does not exist at "+unreal_binaries_dir)
 
     if os.path.exists(unreal_sln_path):
-        shutil.rmtree(unreal_sln_path)
+        os.remove(unreal_sln_path)
     else:
         print("WARNING - .sln File does not exist at "+unreal_sln_path)
