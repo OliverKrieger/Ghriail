@@ -1,10 +1,10 @@
 # Ghriail Scripts
 
-## Path configurations
+## Script Configurations
 
 ### Script runner:
 
-To run helper scripts, enter `python .\script_runner.py`. Tested on python version 3.12.6
+To run helper scripts, enter `python .\script_runner.py`. Tested on python version `3.12.6`
 
 The script runner is at the top of the root to make sure that the os.getcwd() would return the correct working directory automatically.
 
