@@ -1,6 +1,6 @@
 from .remove_compiled import remove_compiled
 from .regenerate_solution import regenerate_solution
-from vs_build_project import build_project
+from .vs_build_project import build_project
 
 
 def request_regenerate_project_files():
