@@ -1,7 +1,7 @@
 import os
 import shutil
 
-from Scripts.Utils.paths import unreal_binaries_dir, unreal_intermediate_dir, unreal_sln_fpath
+from Scripts.Utils.paths import unreal_binaries_dir, unreal_intermediate_dir, unreal_sln_path
 
 def remove_compiled():
     if os.path.exists(unreal_intermediate_dir):
@@ -14,7 +14,7 @@ def remove_compiled():
     else:
         print("WARNING - Binaries folder does not exist at "+unreal_binaries_dir)
 
-    if os.path.exists(unreal_sln_fpath):
-        shutil.rmtree(unreal_sln_fpath)
+    if os.path.exists(unreal_sln_path):
+        shutil.rmtree(unreal_sln_path)
     else:
-        print("WARNING - .sln File does not exist at "+unreal_sln_fpath)
+        print("WARNING - .sln File does not exist at "+unreal_sln_path)
