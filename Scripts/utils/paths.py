@@ -1,5 +1,5 @@
 import os
-from .path_utils import find_file_with_ext, get_project_name
+from .path_utils import find_file_with_ext, get_project_name, get_project_solution
 from .utils_engine import find_engine_version, find_engine_path
 
 working_dir = os.getcwd()
@@ -12,7 +12,7 @@ unreal_project_buildcs_fpath = os.path.join(unreal_source_dir, project_name, (pr
 
 unreal_binaries_dir = os.path.join(working_dir, "Binaries")
 unreal_intermediate_dir = os.path.join(working_dir, "Intermediate")
-unreal_sln_fpath = find_file_with_ext(working_dir, ".sln")
+unreal_sln_fpath = get_project_solution(working_dir, ".sln")
 unreal_sln_path = os.path.join(working_dir, unreal_sln_fpath)
 
 engine_version = find_engine_version(unreal_uproject_fpath)

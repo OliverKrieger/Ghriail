@@ -14,6 +14,7 @@ def remove_compiled():
     else:
         print("WARNING - Binaries folder does not exist at "+unreal_binaries_dir)
 
+    print(unreal_sln_path)
     if os.path.exists(unreal_sln_path):
         os.remove(unreal_sln_path)
     else:
