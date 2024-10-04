@@ -8,7 +8,7 @@ def regenerate_solution():
         "-projectfiles", 
         "-project=" + unreal_uproject_path, 
         "-game",
-        "-engine"
+        "-rocket"
     ]
     subprocess.run(regenerate_command, check=True)
     print("Regenerated Visual Studio solution file.")
