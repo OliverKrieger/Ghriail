@@ -24,9 +24,10 @@ FGridCell& AGrid::GetCell(int x, int y, int z)
     // Handle invalid access (optional)
     UE_LOG(GridModule_LogCategory, Error, TEXT("Invalid GridCell coordinates: (%d, %d, %d)"), x, y, z);
 
-    // Returning a dummy or default FGridCell as a fallback (you can handle this differently)
-    static FGridCell DummyCell;
-    return DummyCell;
+    // returns an uninitialised cell
+    static FGridCell Uninitialised;
+    Uninitialised.Type = ECellType::Uninitialised;
+    return Uninitialised;
 }
 
 // Called when the game starts or when spawned

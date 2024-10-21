@@ -11,5 +11,6 @@ enum class ECellType : uint8
     Walkable UMETA(DisplayName = "Walkable"),
     Air UMETA(DisplayName = "Air"),
     Impassable UMETA(DisplayName = "Impassable"),
-    DifficultTerrain UMETA(DisplayName = "Difficult Terrain")
+    DifficultTerrain UMETA(DisplayName = "Difficult Terrain"),
+    Uninitialised UMETA(DisplayName = "Uninitialised")
 };
