@@ -10,7 +10,12 @@
             "LoadingPhase": "Default"
         },
         {
-            "Name": "Pathfinding",
+            "Name": "PathfindingModule",
+            "Type": "Runtime",
+            "LoadingPhase": "Default"
+        },
+        {
+            "Name": "GridModule",
             "Type": "Runtime",
             "LoadingPhase": "Default"
         }

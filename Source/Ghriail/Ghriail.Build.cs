@@ -8,7 +8,7 @@ public class Ghriail : ModuleRules
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 	
-		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "EnhancedInput" , "Pathfinding" });
+		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "EnhancedInput" , "PathfindingModule" , "GridModule" });
 
 		PrivateDependencyModuleNames.AddRange(new string[] {  });
 

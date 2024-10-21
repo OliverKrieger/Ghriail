@@ -16,7 +16,11 @@ def select_option():
         print("3 - regenerate project files")
         print("4 - regenerate and rebuild project files")
         print("-1 - exit")
-        selected_option = int(input("Selected Option:"))
+        try:
+            selected_option = int(input("Selected Option:"))
+        except ValueError:
+            print("WARNING - Given input is not a number!")
+            continue
 
         match selected_option:
             case 1:

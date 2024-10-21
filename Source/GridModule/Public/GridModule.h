@@ -2,7 +2,7 @@
 #include "CoreMinimal.h"
 #include "Modules/ModuleManager.h"
 
-class FPathfinding : public IModuleInterface
+class FGridModule : public IModuleInterface
 {
 public:
 	virtual void StartupModule() override;
