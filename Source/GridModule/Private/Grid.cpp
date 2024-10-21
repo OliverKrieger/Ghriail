@@ -8,7 +8,25 @@ AGrid::AGrid()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
+}
 
+FGridCell& AGrid::GetCell(int x, int y, int z)
+{
+    // Calculate the 1D index from the 3D coordinates
+    int index = x + (y * Width) + (z * Width * Height);
+
+    // Ensure the index is valid
+    if (index >= 0 && index < GridCells.Num())
+    {
+        return GridCells[index];  // Return the reference to the FGridCell at the computed index
+    }
+
+    // Handle invalid access (optional)
+    UE_LOG(GridModule_LogCategory, Error, TEXT("Invalid GridCell coordinates: (%d, %d, %d)"), x, y, z);
+
+    // Returning a dummy or default FGridCell as a fallback (you can handle this differently)
+    static FGridCell DummyCell;
+    return DummyCell;
 }
 
 // Called when the game starts or when spawned
