@@ -12,9 +12,6 @@ struct FGridCell
 {
     GENERATED_BODY()
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Test")
-    FVector TestPosition;
-
     // Example of UPROPERTY if you need it exposed to Unreal
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Grid")
     FVector Position;
