@@ -26,6 +26,6 @@ struct FGridCell
     FGridCell() {
         Position = FVector(.0f, .0f, .0f);
         Cost = 1;
-        Type = ECellType::Impassable;
+        Type = ECellType::Uninitialised;
     }
 };
