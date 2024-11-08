@@ -190,10 +190,11 @@ void AGrid::UpdateDebugGridCells()
         return;
     }
 
+    FlushPersistentDebugLines(GetWorld());
+
     // Clear existing debug lines if bDrawDebugBoxes is set to false
     if (!bDrawDebugBoxes)
     {
-        FlushPersistentDebugLines(GetWorld());
         return;
     }
 
@@ -254,6 +255,9 @@ void AGrid::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
         PropertyName == GET_MEMBER_NAME_CHECKED(AGrid, CellSize))
     {
         InitializeGrid();
+        if (bDrawDebugBoxes) {
+            UpdateDebugGridCells();
+        }
     }
 }
 void AGrid::OnConstruction(const FTransform& Transform)
