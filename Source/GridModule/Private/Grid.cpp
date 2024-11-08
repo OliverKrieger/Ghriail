@@ -122,8 +122,8 @@ void AGrid::PerformDownwardLineTrace(const int32& GridIndex)
 {
     FGridCell GridCellData;
     GridCellData.Cost = 1; // TODO cost dependant on Type
-    GridCellData.Position = ConvertGridPositionToWorld(Convert1DIndexTo3D(GridIndex));
-    GridCellData.Type = PerformRaycast(GridCellData.Position);
+    GridCellData.Position = ConvertGridPositionToWorld(Convert1DIndexTo3D(GridIndex)) + FVector(CellSize/2); // move the position of the grid to the center of the box
+    GridCellData.Type = PerformRaycast(GridCellData.Position+FVector(0,0,CellSize/2)); // move the z to the top of the box
 
     if (GridIndex < GridCells.Num()) {
         GridCells[GridIndex] = GridCellData;
@@ -149,12 +149,16 @@ ECellType AGrid::PerformRaycast(const FVector& worldStartPosition)
 #if WITH_EDITOR
     if (bHit)
     {
-        DrawDebugLine(World, Start, End, FColor::Green, false, 1.0f, 0, 1.0f);
+        if (bDrawDebugRaytrace) {
+            DrawDebugLine(World, Start, End, FColor::Green, false, 1.0f, 0, 1.0f);
+        }
         return ECellType::Walkable; // TODO if previous walkable, impassable || TODO create class for blocker that has cell type and if that, put that down instead (rough terrain, etc)
     }
     else
     {
-        DrawDebugLine(World, Start, End, FColor::Red, false, 1.0f, 0, 1.0f);
+        if (bDrawDebugRaytrace) {
+            DrawDebugLine(World, Start, End, FColor::Red, false, 1.0f, 0, 1.0f);
+        }
         return ECellType::Air;
     }
 #endif
@@ -213,7 +217,7 @@ void AGrid::UpdateDebugGridCells()
             break;
         }
 
-        UE_LOG(GridModule_LogCategory, Log, TEXT("Drawing Grid Debug at position %s"), *Cell.Position.ToString());
+        //UE_LOG(GridModule_LogCategory, Log, TEXT("Drawing Grid Debug at position %s"), *Cell.Position.ToString());
         DrawDebugBox(
             GetWorld(),
             Cell.Position,

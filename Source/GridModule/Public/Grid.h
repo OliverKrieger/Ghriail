@@ -33,8 +33,6 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	/* PUBLIC VALUES */
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Grid")
 	TArray<FGridCell> GridCells;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Grid")
@@ -64,6 +62,9 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "Debug")
 	bool bDrawDebugBoxes = false;
+
+	UPROPERTY(EditAnywhere, Category = "Debug")
+	bool bDrawDebugRaytrace = false;
 
 private:
 	/* PRIVATE LINETRACE FUNCTIONS */
