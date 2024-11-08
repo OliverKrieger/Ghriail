@@ -21,7 +21,7 @@ public:
 	AGrid();
 
 	// Initializes the grid and performs ray tracing
-	void InitializeGrid();
+	void UpdateGrid();
 
 protected:
 	// Called when the game starts or when spawned

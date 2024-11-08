@@ -9,15 +9,19 @@ AGrid::AGrid()
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-    InitializeGrid();
+    UpdateGrid();
 }
 
-void AGrid::InitializeGrid()
+void AGrid::UpdateGrid()
 {
+    FlushPersistentDebugLines(GetWorld()); // flush before everything else so that update grid cells does not have to handle it and thus not clear other debug
     GridCells.Empty(); // Empty all cells before calculation
     GridSize1D = Depth * Width * Height;
     GridCells.SetNum(GridSize1D);
     PerformRayTraceForTopCells();
+    if (bDrawDebugBoxes) {
+        UpdateDebugGridCells();
+    }
 }
 
 
@@ -190,14 +194,6 @@ void AGrid::UpdateDebugGridCells()
         return;
     }
 
-    FlushPersistentDebugLines(GetWorld());
-
-    // Clear existing debug lines if bDrawDebugBoxes is set to false
-    if (!bDrawDebugBoxes)
-    {
-        return;
-    }
-
     for (const FGridCell& Cell : GridCells)
     {
         FColor BoxColor;
@@ -245,7 +241,10 @@ void AGrid::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
     // Check if the property that changed is bDrawDebugBoxes
     if (PropertyName == GET_MEMBER_NAME_CHECKED(AGrid, bDrawDebugBoxes))
     {
-        UpdateDebugGridCells();
+        FlushPersistentDebugLines(GetWorld());
+        if (bDrawDebugBoxes) {
+            UpdateDebugGridCells();
+        }
     }
 
     // Check if you remake the grid
@@ -254,10 +253,7 @@ void AGrid::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
         PropertyName == GET_MEMBER_NAME_CHECKED(AGrid, Depth) ||
         PropertyName == GET_MEMBER_NAME_CHECKED(AGrid, CellSize))
     {
-        InitializeGrid();
-        if (bDrawDebugBoxes) {
-            UpdateDebugGridCells();
-        }
+        UpdateGrid();
     }
 }
 void AGrid::OnConstruction(const FTransform& Transform)
@@ -266,8 +262,8 @@ void AGrid::OnConstruction(const FTransform& Transform)
     Super::OnConstruction(Transform);
 
     // If Debug enabled on construction
-    UE_LOG(GridModule_LogCategory, Log, TEXT("On Construction DrawDebugBoxes Value: %s"), bDrawDebugBoxes ? TEXT("true") : TEXT("false"));
     if (bDrawDebugBoxes) {
+        FlushPersistentDebugLines(GetWorld());
         UpdateDebugGridCells();
     }
 
