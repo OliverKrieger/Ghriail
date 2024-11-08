@@ -26,6 +26,7 @@ public:
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+	virtual void BeginDestroy() override;
 
 public:	
 	// Called every frame
@@ -80,6 +81,8 @@ private:
 
 #if WITH_EDITOR
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
+	virtual void OnConstruction(const FTransform& Transform) override;
+	virtual void PostLoad() override;
 #endif
 
 };

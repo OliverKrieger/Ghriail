@@ -14,6 +14,7 @@ AGrid::AGrid()
 
 void AGrid::InitializeGrid()
 {
+    GridCells.Empty(); // Empty all cells before calculation
     GridSize1D = Depth * Width * Height;
     GridCells.SetNum(GridSize1D);
     PerformRayTraceForTopCells();
@@ -25,6 +26,14 @@ void AGrid::BeginPlay()
 {
 	Super::BeginPlay();
 	
+}
+
+void AGrid::BeginDestroy()
+{
+    Super::BeginDestroy();
+
+    // Flush the persistent debug lines
+    FlushPersistentDebugLines(GetWorld());
 }
 
 // Called every frame
@@ -86,6 +95,13 @@ FVector AGrid::ConvertGridPositionToWorld(FVector GridPosition)
 
 void AGrid::PerformRayTraceForTopCells()
 {
+    // Error check for if grid cells is being accessed before it has been intialised!
+    if (GridCells.Num() == 0)
+    {
+        UE_LOG(GridModule_LogCategory, Error, TEXT("Grid Cell is empty, cannot perform cell calculation!"));
+        return;
+    }
+
     for (int topHeightIndex = GetTopLayerStartIndex(); topHeightIndex < GetGridSize1D(); topHeightIndex++)
     {
         for (int heightIterIndex = 0; heightIterIndex < Height; heightIterIndex++)
@@ -94,6 +110,8 @@ void AGrid::PerformRayTraceForTopCells()
             PerformDownwardLineTrace(currentIndex);
         }
     }
+
+    UE_LOG(GridModule_LogCategory, Log, TEXT("Grid Cell Calculation Complete"));
 }
 
 void AGrid::PerformDownwardLineTrace(const int32& GridIndex)
@@ -103,7 +121,12 @@ void AGrid::PerformDownwardLineTrace(const int32& GridIndex)
     GridCellData.Position = ConvertGridPositionToWorld(Convert1DIndexTo3D(GridIndex));
     GridCellData.Type = PerformRaycast(GridCellData.Position);
 
-    GridCells[GridIndex] = GridCellData;
+    if (GridIndex < GridCells.Num()) {
+        GridCells[GridIndex] = GridCellData;
+    }
+    else {
+        UE_LOG(GridModule_LogCategory, Error, TEXT("Line trace attempting to access grid index %d which is outside the bounds of the grid!"), GridIndex);
+    }
 }
 
 ECellType AGrid::PerformRaycast(const FVector& worldStartPosition)
@@ -193,10 +216,11 @@ void AGrid::UpdateDebugGridCells()
             break;
         }
 
+        UE_LOG(GridModule_LogCategory, Log, TEXT("Drawing Grid Debug at position %s"), *Cell.Position.ToString());
         DrawDebugBox(
             GetWorld(),
             Cell.Position,
-            FVector(CellSize/2), // Half-size of the box
+            FVector(CellSize/2), // Half-size of the box to make it actual size
             BoxColor,
             true,
             -1.0f, // Persistent (set to DeltaTime for temporary drawing)
@@ -215,10 +239,38 @@ void AGrid::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
         ? PropertyChangedEvent.Property->GetFName()
         : NAME_None;
 
+    UE_LOG(GridModule_LogCategory, Log, TEXT("Property change: %s"), *PropertyName.ToString());
+
     // Check if the property that changed is bDrawDebugBoxes
     if (PropertyName == GET_MEMBER_NAME_CHECKED(AGrid, bDrawDebugBoxes))
     {
         UpdateDebugGridCells();
     }
+
+    // Check if you remake the grid
+    if (PropertyName == GET_MEMBER_NAME_CHECKED(AGrid, Width) ||
+        PropertyName == GET_MEMBER_NAME_CHECKED(AGrid, Height) ||
+        PropertyName == GET_MEMBER_NAME_CHECKED(AGrid, Depth) ||
+        PropertyName == GET_MEMBER_NAME_CHECKED(AGrid, CellSize))
+    {
+        InitializeGrid();
+    }
+}
+void AGrid::OnConstruction(const FTransform& Transform)
+{
+    // Whenever the actor is placed, moved or modified
+    Super::OnConstruction(Transform);
+
+    // If Debug enabled on construction
+    UE_LOG(GridModule_LogCategory, Log, TEXT("On Construction DrawDebugBoxes Value: %s"), bDrawDebugBoxes ? TEXT("true") : TEXT("false"));
+    if (bDrawDebugBoxes) {
+        UpdateDebugGridCells();
+    }
+
+}
+void AGrid::PostLoad()
+{
+    // Add anything here that you want post level load, warning however is that this can call twice at times
+    Super::PostLoad();
 }
 #endif
