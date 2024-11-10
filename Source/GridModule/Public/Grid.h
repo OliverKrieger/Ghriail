@@ -4,6 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Components/SceneComponent.h"
+#include "Components/HierarchicalInstancedStaticMeshComponent.h"
 
 #include "GridModule_LogCategory.h"
 
@@ -77,8 +79,20 @@ private:
 	int32 GetGridSize1D();
 	FVector3f GetGridSize3D();
 
+	void AddHIMCVisualMesh(const FTransform & InstanceTransform, const ECellType & CellType);
+	bool HasMeshAvailability();
+
 	/* PRIVATE DEBUG FUNCTIONS */
 	void UpdateDebugGridCells();
+
+	UPROPERTY(VisibleAnywhere, Category = "Grid", Transient)
+	UHierarchicalInstancedStaticMeshComponent* HIMC_Air;
+
+	UPROPERTY(VisibleAnywhere, Category = "Grid", Transient)
+	UHierarchicalInstancedStaticMeshComponent* HIMC_Walkable;
+
+	UPROPERTY(VisibleAnywhere, Category = "Grid", Transient)
+	UHierarchicalInstancedStaticMeshComponent* HIMC_Impassable;
 
 #if WITH_EDITOR
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;

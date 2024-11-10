@@ -9,12 +9,31 @@ AGrid::AGrid()
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
+    RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("RootSceneComponent"));
+    RootComponent->SetMobility(EComponentMobility::Static);
+    RootComponent->bVisualizeComponent = true;
+
+    HIMC_Air = CreateDefaultSubobject<UHierarchicalInstancedStaticMeshComponent>(TEXT("HIMC_Air"));
+    HIMC_Air->SetCullDistances(1000.0f, 10000.0f); // Adjust culling range
+    HIMC_Air->bAffectDistanceFieldLighting = false; // Optimize lighting
+    HIMC_Air->SetupAttachment(RootComponent);
+
+    HIMC_Walkable = CreateDefaultSubobject<UHierarchicalInstancedStaticMeshComponent>(TEXT("HIMC_Walkable"));
+    HIMC_Walkable->SetCullDistances(1000.0f, 10000.0f);
+    HIMC_Walkable->bAffectDistanceFieldLighting = false;
+    HIMC_Walkable->SetupAttachment(RootComponent);
+
+    HIMC_Impassable = CreateDefaultSubobject<UHierarchicalInstancedStaticMeshComponent>(TEXT("HIMC_Impassable"));
+    HIMC_Impassable->SetCullDistances(1000.0f, 10000.0f);
+    HIMC_Impassable->bAffectDistanceFieldLighting = false;
+    HIMC_Impassable->SetupAttachment(RootComponent);
+
     UpdateGrid();
 }
 
 void AGrid::UpdateGrid()
 {
-    FlushPersistentDebugLines(GetWorld()); // flush before everything else so that update grid cells does not have to handle it and thus not clear other debug
+    //FlushPersistentDebugLines(GetWorld()); // flush before everything else so that update grid cells does not have to handle it and thus not clear other debug
     GridCells.Empty(); // Empty all cells before calculation
     GridSize1D = Depth * Width * Height;
     GridCells.SetNum(GridSize1D);
@@ -35,9 +54,6 @@ void AGrid::BeginPlay()
 void AGrid::BeginDestroy()
 {
     Super::BeginDestroy();
-
-    // Flush the persistent debug lines
-    FlushPersistentDebugLines(GetWorld());
 }
 
 // Called every frame
@@ -185,6 +201,55 @@ FVector3f AGrid::GetGridSize3D()
     return FVector3f(Depth, Width, Height);
 }
 
+void AGrid::AddHIMCVisualMesh(const FTransform& InstanceTransform, const ECellType& CellType)
+{
+    switch (CellType)
+    {
+    case ECellType::Air:
+        if (HIMC_Air && HIMC_Air->GetStaticMesh())
+        {
+            HIMC_Air->AddInstance(InstanceTransform);
+        }
+        break;
+
+    case ECellType::Walkable:
+        if (HIMC_Walkable && HIMC_Walkable->GetStaticMesh())
+        {
+            FTransform Transform(InstanceTransform.GetLocation() - FVector(0, 0, CellSize / 2));
+            HIMC_Walkable->AddInstance(Transform);
+        }
+        break;
+
+    case ECellType::Impassable:
+        if (HIMC_Impassable && HIMC_Impassable->GetStaticMesh())
+        {
+            HIMC_Impassable->AddInstance(InstanceTransform);
+        }
+        break;
+
+    default:
+        UE_LOG(GridModule_LogCategory, Warning, TEXT("Unknown cell type"));
+        break;
+    }
+}
+
+bool AGrid::HasMeshAvailability()
+{
+    if (!HIMC_Walkable || !HIMC_Walkable->GetStaticMesh()) {
+        UE_LOG(GridModule_LogCategory, Warning, TEXT("No mesh for grid walkable component!"));
+        return false;
+    }
+    if (!HIMC_Impassable || !HIMC_Impassable->GetStaticMesh()) {
+        UE_LOG(GridModule_LogCategory, Warning, TEXT("No mesh for grid impassable component!"));
+        return false;
+    }
+    if (!HIMC_Air || !HIMC_Air->GetStaticMesh()) {
+        UE_LOG(GridModule_LogCategory, Warning, TEXT("No mesh for grid air component!"));
+        return false;
+    }
+    return true;
+}
+
 /* ----------------------------- */
 /* ----------------------------- */
 /* PRIVATE DEBUG FUNCTIONS */
@@ -192,42 +257,20 @@ FVector3f AGrid::GetGridSize3D()
 /* ----------------------------- */
 void AGrid::UpdateDebugGridCells()
 {
-    UWorld* World = GetWorld();
-    if (!World)
-    {
+    if (!HasMeshAvailability()) {
+        UE_LOG(GridModule_LogCategory, Warning, TEXT("One or many grid mesh components not available!"));
         return;
     }
 
-    for (const FGridCell& Cell : GridCells)
-    {
-        FColor BoxColor;
-        switch (Cell.Type)
-        {
-        case ECellType::Walkable:
-            BoxColor = FColor::Yellow;
-            break;
-        case ECellType::Impassable:
-            BoxColor = FColor::Red;
-            break;
-        case ECellType::Air:
-            BoxColor = FColor::Blue;
-            break;
-        default:
-            BoxColor = FColor::White;
-            break;
+    HIMC_Air->ClearInstances();
+    HIMC_Walkable->ClearInstances();
+    HIMC_Impassable->ClearInstances();
+    if (bDrawDebugBoxes) {
+        for (const FGridCell& Cell : GridCells) {
+            FVector Location(Cell.Position);
+            FTransform Transform(Location);
+            AddHIMCVisualMesh(Transform, Cell.Type);
         }
-
-        //UE_LOG(GridModule_LogCategory, Log, TEXT("Drawing Grid Debug at position %s"), *Cell.Position.ToString());
-        DrawDebugBox(
-            GetWorld(),
-            Cell.Position,
-            FVector(CellSize/2), // Half-size of the box to make it actual size
-            BoxColor,
-            true,
-            -1.0f, // Persistent (set to DeltaTime for temporary drawing)
-            0, // Depth Property
-            2.0f // Thickness of lines
-        );
     }
 }
 
@@ -245,10 +288,7 @@ void AGrid::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
     // Check if the property that changed is bDrawDebugBoxes
     if (PropertyName == GET_MEMBER_NAME_CHECKED(AGrid, bDrawDebugBoxes))
     {
-        FlushPersistentDebugLines(GetWorld());
-        if (bDrawDebugBoxes) {
-            UpdateDebugGridCells();
-        }
+        UpdateDebugGridCells();
     }
 
     // Check if you remake the grid
@@ -267,7 +307,6 @@ void AGrid::OnConstruction(const FTransform& Transform)
 
     // If Debug enabled on construction
     if (bDrawDebugBoxes) {
-        FlushPersistentDebugLines(GetWorld());
         UpdateDebugGridCells();
     }
 
