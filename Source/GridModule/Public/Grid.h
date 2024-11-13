@@ -5,16 +5,19 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "Components/SceneComponent.h"
+#include "Components/InstancedStaticMeshComponent.h"
 #include "Components/HierarchicalInstancedStaticMeshComponent.h"
 
 #include "GridModule_LogCategory.h"
 
 #include "GridCell.h"
+#include "IGridInterface.h"
+#include "GridDebugVisualiserComponent.h"
 
 #include "Grid.generated.h"
 
 UCLASS()
-class GRIDMODULE_API AGrid : public AActor
+class GRIDMODULE_API AGrid : public AActor, public IGridInterface
 {
 	GENERATED_BODY()
 	
@@ -28,7 +31,6 @@ public:
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
-	virtual void BeginDestroy() override;
 
 public:	
 	// Called every frame
@@ -37,18 +39,16 @@ public:
 	/* PUBLIC VALUES */
 	TArray<FGridCell> GridCells;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Grid")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Grid", meta = (ClampMin = "1"))
 	int Width = 1;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Grid")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Grid", meta = (ClampMin = "1"))
 	int Depth = 1;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Grid")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Grid", meta = (ClampMin = "1"))
 	int Height = 1;
 
-	int GridSize1D = 1;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Grid")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Grid", meta = (ClampMin = "1"))
 	float CellSize = 100.f; // The size of each cell in the grid
 
 
@@ -63,36 +63,49 @@ public:
 	/* DEBUG PUBLIC VALUES */
 
 	UPROPERTY(EditAnywhere, Category = "Debug")
-	bool bDrawDebugBoxes = false;
-
-	UPROPERTY(EditAnywhere, Category = "Debug")
 	bool bDrawDebugRaytrace = false;
 
+
+
+	/* ----------------------------- */
+	/* ----------------------------- */
+	/* INTERFACE OVERRIDES */
+	/* ----------------------------- */
+	/* ----------------------------- */
+	virtual int32 GetGridDepth() const override;
+	virtual int32 GetGridWidth() const override;
+	virtual int32 GetGridHeight() const override;
+	virtual int32 GetGridSize() const override;
+	virtual float GetGridCellSize() const override;
+	virtual TArray<FGridCell> GetGridCells() const override;
+
 private:
+	/* ----------------------------- */
+	/* ----------------------------- */
+	/* PRIVATE DEBUG */
+	/* ----------------------------- */
+	/* ----------------------------- */
+	UPROPERTY(VisibleAnywhere, Category = "Grid", Transient)
+	UGridDebugVisualiserComponent* GridDebugVisualiser;
+
+
+	/* ----------------------------- */
+	/* ----------------------------- */
 	/* PRIVATE LINETRACE FUNCTIONS */
+	/* ----------------------------- */
+	/* ----------------------------- */
 	void PerformRayTraceForTopCells();
 	void PerformDownwardLineTrace(const int32& StartPosition);
 	ECellType PerformRaycast(const FVector& worldStartPosition);
 
+	/* ----------------------------- */
+	/* ----------------------------- */
 	/* PRIVATE HELPER FUNCTIONS */
+	/* ----------------------------- */
+	/* ----------------------------- */
 	int32 GetTopLayerStartIndex();
 	int32 GetGridSize1D();
 	FVector3f GetGridSize3D();
-
-	void AddHIMCVisualMesh(const FTransform & InstanceTransform, const ECellType & CellType);
-	bool HasMeshAvailability();
-
-	/* PRIVATE DEBUG FUNCTIONS */
-	void UpdateDebugGridCells();
-
-	UPROPERTY(VisibleAnywhere, Category = "Grid", Transient)
-	UHierarchicalInstancedStaticMeshComponent* HIMC_Air;
-
-	UPROPERTY(VisibleAnywhere, Category = "Grid", Transient)
-	UHierarchicalInstancedStaticMeshComponent* HIMC_Walkable;
-
-	UPROPERTY(VisibleAnywhere, Category = "Grid", Transient)
-	UHierarchicalInstancedStaticMeshComponent* HIMC_Impassable;
 
 #if WITH_EDITOR
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;

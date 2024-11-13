@@ -10,13 +10,17 @@ def close_program(process_name):
 
 # Check for Unreal Engine and Visual Studio processes
 def close_unreal_and_vs():
-    # Unreal Engine process names may vary; these are common ones
-    unreal_process_names = ['UnrealEditor.exe', 'UE4Editor.exe', 'UE5Editor.exe']
     vs_process_name = 'devenv.exe'  # Visual Studio
 
     # Close Unreal Engine if running
-    for process in unreal_process_names:
-        close_program(process)
+    close_unreal()
 
     # Close Visual Studio if running
     close_program(vs_process_name)
+
+def close_unreal():
+    # Unreal Engine process names may vary; these are common ones
+    unreal_process_names = ['UnrealEditor.exe', 'UE4Editor.exe', 'UE5Editor.exe']
+    # Close Unreal Engine if running
+    for process in unreal_process_names:
+        close_program(process)

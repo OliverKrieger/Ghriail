@@ -8,6 +8,7 @@
 from Scripts.Module_Manager.create_module import request_module_create
 from Scripts.Module_Manager.remove_module import request_module_remove
 from Scripts.UBT_Manager.regenerate_project_files import request_regenerate_project_files, request_regenerate_and_rebuild_project_files
+from Scripts.Process_Manager.process_terminate import close_unreal
 
 def select_option():
     while(True):
@@ -15,6 +16,7 @@ def select_option():
         print("2 - remove existing module")
         print("3 - regenerate project files")
         print("4 - regenerate and rebuild project files")
+        print("5 - close unreal engine only")
         print("-1 - exit")
         try:
             selected_option = int(input("Selected Option:"))
@@ -31,6 +33,8 @@ def select_option():
                 request_regenerate_project_files()
             case 4:
                 request_regenerate_and_rebuild_project_files()
+            case 5:
+                close_unreal()
             case -1:
                 break
             case _:

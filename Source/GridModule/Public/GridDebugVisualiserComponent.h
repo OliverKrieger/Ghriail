@@ -1,0 +1,88 @@
+// Fill out your copyright notice in the Description page of Project Settings.
+
+#pragma once
+
+#include "CoreMinimal.h"
+#include "Components/ActorComponent.h"
+
+#include "Components/SceneComponent.h"
+#include "Components/HierarchicalInstancedStaticMeshComponent.h"
+#include "UObject/ConstructorHelpers.h"
+
+#include "GridModule_LogCategory.h"
+
+#include "GridCell.h"
+#include "IGridInterface.h"
+
+#include "GridDebugVisualiserComponent.generated.h"
+
+
+UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
+class GRIDMODULE_API UGridDebugVisualiserComponent : public UActorComponent
+{
+	GENERATED_BODY()
+
+public:	
+	// Sets default values for this component's properties
+	UGridDebugVisualiserComponent();
+
+protected:
+	// Called when the game starts
+	virtual void BeginPlay() override;
+
+public:	
+	// Called every frame
+	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+
+	/* ----------------------------- */
+	/* ----------------------------- */
+	/* DEBUG PUBLIC VALUES */
+	/* ----------------------------- */
+	/* ----------------------------- */
+	UPROPERTY(EditAnywhere, Category = "Debug Visualisation")
+	bool bDrawDebugBoxes = false;
+
+	UPROPERTY(EditAnywhere, Category = "Debug Visualisation")
+	float DebugVisualisationDistanceMin = 1000.0f;
+
+	UPROPERTY(EditAnywhere, Category = "Debug Visualisation")
+	float DebugVisualisationDistanceMax = 10000.0f;
+
+	/* ----------------------------- */
+	/* ----------------------------- */
+	/* DEBUG PUBLIC FUNCTIONS */
+	/* ----------------------------- */
+	/* ----------------------------- */
+	void UpdateDebugGridCells();
+	bool HasMeshAvailability();
+	void AddHIMCVisualMesh(const FTransform& InstanceTransform, const ECellType& CellType);
+
+	
+private:
+	/* ----------------------------- */
+	/* ----------------------------- */
+	/* DEBUG PRIVATE VALUES */
+	/* ----------------------------- */
+	/* ----------------------------- */
+
+	UHierarchicalInstancedStaticMeshComponent* HIMC_Air;
+
+	UHierarchicalInstancedStaticMeshComponent* HIMC_Walkable;
+
+	UHierarchicalInstancedStaticMeshComponent* HIMC_Impassable;
+
+	// Non-BP
+	IGridInterface* GridInterface;
+
+	/* ----------------------------- */
+	/* ----------------------------- */
+	/* DEBUG PRIVATEFUNCTIONS */
+	/* ----------------------------- */
+	/* ----------------------------- */
+	void GetParentActor();
+
+#if WITH_EDITOR
+	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
+#endif
+
+};

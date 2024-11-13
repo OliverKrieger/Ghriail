@@ -6,6 +6,7 @@
 // Sets default values
 AGrid::AGrid()
 {
+    UE_LOG(GridModule_LogCategory, Log, TEXT("Grid construction called!"));
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
@@ -13,20 +14,7 @@ AGrid::AGrid()
     RootComponent->SetMobility(EComponentMobility::Static);
     RootComponent->bVisualizeComponent = true;
 
-    HIMC_Air = CreateDefaultSubobject<UHierarchicalInstancedStaticMeshComponent>(TEXT("HIMC_Air"));
-    HIMC_Air->SetCullDistances(1000.0f, 10000.0f); // Adjust culling range
-    HIMC_Air->bAffectDistanceFieldLighting = false; // Optimize lighting
-    HIMC_Air->SetupAttachment(RootComponent);
-
-    HIMC_Walkable = CreateDefaultSubobject<UHierarchicalInstancedStaticMeshComponent>(TEXT("HIMC_Walkable"));
-    HIMC_Walkable->SetCullDistances(1000.0f, 10000.0f);
-    HIMC_Walkable->bAffectDistanceFieldLighting = false;
-    HIMC_Walkable->SetupAttachment(RootComponent);
-
-    HIMC_Impassable = CreateDefaultSubobject<UHierarchicalInstancedStaticMeshComponent>(TEXT("HIMC_Impassable"));
-    HIMC_Impassable->SetCullDistances(1000.0f, 10000.0f);
-    HIMC_Impassable->bAffectDistanceFieldLighting = false;
-    HIMC_Impassable->SetupAttachment(RootComponent);
+    GridDebugVisualiser = CreateDefaultSubobject<UGridDebugVisualiserComponent>(TEXT("GridDebugVisualiser"));
 
     UpdateGrid();
 }
@@ -35,12 +23,9 @@ void AGrid::UpdateGrid()
 {
     //FlushPersistentDebugLines(GetWorld()); // flush before everything else so that update grid cells does not have to handle it and thus not clear other debug
     GridCells.Empty(); // Empty all cells before calculation
-    GridSize1D = Depth * Width * Height;
-    GridCells.SetNum(GridSize1D);
+    GridCells.SetNum(GetGridSize1D());
     PerformRayTraceForTopCells();
-    if (bDrawDebugBoxes) {
-        UpdateDebugGridCells();
-    }
+    GridDebugVisualiser->UpdateDebugGridCells();
 }
 
 
@@ -49,11 +34,6 @@ void AGrid::BeginPlay()
 {
 	Super::BeginPlay();
 	
-}
-
-void AGrid::BeginDestroy()
-{
-    Super::BeginDestroy();
 }
 
 // Called every frame
@@ -109,6 +89,42 @@ FVector AGrid::ConvertGridPositionToWorld(FVector GridPosition)
 
 /* ----------------------------- */
 /* ----------------------------- */
+/* INTERFACE CALLS */
+/* ----------------------------- */
+/* ----------------------------- */
+int32 AGrid::GetGridDepth() const
+{
+    return Depth;
+}
+
+int32 AGrid::GetGridWidth() const
+{
+    return Width;
+}
+
+int32 AGrid::GetGridHeight() const
+{
+    return Height;
+}
+
+int32 AGrid::GetGridSize() const
+{
+    return Depth * Width * Height;
+}
+
+float AGrid::GetGridCellSize() const
+{
+    return CellSize;
+}
+
+TArray<FGridCell> AGrid::GetGridCells() const
+{
+    return GridCells;
+}
+
+
+/* ----------------------------- */
+/* ----------------------------- */
 /* LINE TRACING */
 /* ----------------------------- */
 /* ----------------------------- */
@@ -122,16 +138,36 @@ void AGrid::PerformRayTraceForTopCells()
         return;
     }
 
-    for (int topHeightIndex = GetTopLayerStartIndex(); topHeightIndex < GetGridSize1D(); topHeightIndex++)
+    UE_LOG(GridModule_LogCategory, Log, TEXT("Begin grid cell calculation"));
+    // Capture the top layer indices range
+    int32 TopLayerStartIndex = GetTopLayerStartIndex();
+
+    // ParallelFor to parallelize the outer loop
+    ParallelFor(GetGridSize1D() - TopLayerStartIndex, [this, TopLayerStartIndex](int32 i)
     {
+        // Calculate the top cell index
+        int topHeightIndex = TopLayerStartIndex + i;
+
+        // Perform downward ray trace for each height in this column
         for (int heightIterIndex = 0; heightIterIndex < Height; heightIterIndex++)
         {
-            int32 currentIndex = topHeightIndex - heightIterIndex * (Depth * Width); // starting height - how far down the height are we
+            int32 currentIndex = topHeightIndex - heightIterIndex * (Depth * Width); // Calculate the 1D index
+
+            // Perform the ray trace and update the grid cell
             PerformDownwardLineTrace(currentIndex);
         }
-    }
+    });
 
-    UE_LOG(GridModule_LogCategory, Log, TEXT("Grid Cell Calculation Complete"));
+    //for (int topHeightIndex = GetTopLayerStartIndex(); topHeightIndex < GetGridSize1D(); topHeightIndex++)
+    //{
+    //    for (int heightIterIndex = 0; heightIterIndex < Height; heightIterIndex++)
+    //    {
+    //        int32 currentIndex = topHeightIndex - heightIterIndex * (Depth * Width); // starting height - how far down the height are we
+    //        PerformDownwardLineTrace(currentIndex);
+    //    }
+    //}
+
+    UE_LOG(GridModule_LogCategory, Log, TEXT("Grid cell calculation complete!"));
 }
 
 void AGrid::PerformDownwardLineTrace(const int32& GridIndex)
@@ -201,78 +237,12 @@ FVector3f AGrid::GetGridSize3D()
     return FVector3f(Depth, Width, Height);
 }
 
-void AGrid::AddHIMCVisualMesh(const FTransform& InstanceTransform, const ECellType& CellType)
-{
-    switch (CellType)
-    {
-    case ECellType::Air:
-        if (HIMC_Air && HIMC_Air->GetStaticMesh())
-        {
-            HIMC_Air->AddInstance(InstanceTransform);
-        }
-        break;
-
-    case ECellType::Walkable:
-        if (HIMC_Walkable && HIMC_Walkable->GetStaticMesh())
-        {
-            FTransform Transform(InstanceTransform.GetLocation() - FVector(0, 0, CellSize / 2));
-            HIMC_Walkable->AddInstance(Transform);
-        }
-        break;
-
-    case ECellType::Impassable:
-        if (HIMC_Impassable && HIMC_Impassable->GetStaticMesh())
-        {
-            HIMC_Impassable->AddInstance(InstanceTransform);
-        }
-        break;
-
-    default:
-        UE_LOG(GridModule_LogCategory, Warning, TEXT("Unknown cell type"));
-        break;
-    }
-}
-
-bool AGrid::HasMeshAvailability()
-{
-    if (!HIMC_Walkable || !HIMC_Walkable->GetStaticMesh()) {
-        UE_LOG(GridModule_LogCategory, Warning, TEXT("No mesh for grid walkable component!"));
-        return false;
-    }
-    if (!HIMC_Impassable || !HIMC_Impassable->GetStaticMesh()) {
-        UE_LOG(GridModule_LogCategory, Warning, TEXT("No mesh for grid impassable component!"));
-        return false;
-    }
-    if (!HIMC_Air || !HIMC_Air->GetStaticMesh()) {
-        UE_LOG(GridModule_LogCategory, Warning, TEXT("No mesh for grid air component!"));
-        return false;
-    }
-    return true;
-}
 
 /* ----------------------------- */
 /* ----------------------------- */
-/* PRIVATE DEBUG FUNCTIONS */
+/* EDITOR SPECIFIC FUNCTIONS */
 /* ----------------------------- */
 /* ----------------------------- */
-void AGrid::UpdateDebugGridCells()
-{
-    if (!HasMeshAvailability()) {
-        UE_LOG(GridModule_LogCategory, Warning, TEXT("One or many grid mesh components not available!"));
-        return;
-    }
-
-    HIMC_Air->ClearInstances();
-    HIMC_Walkable->ClearInstances();
-    HIMC_Impassable->ClearInstances();
-    if (bDrawDebugBoxes) {
-        for (const FGridCell& Cell : GridCells) {
-            FVector Location(Cell.Position);
-            FTransform Transform(Location);
-            AddHIMCVisualMesh(Transform, Cell.Type);
-        }
-    }
-}
 
 #if WITH_EDITOR
 void AGrid::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
@@ -284,12 +254,6 @@ void AGrid::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
         : NAME_None;
 
     UE_LOG(GridModule_LogCategory, Log, TEXT("Property change: %s"), *PropertyName.ToString());
-
-    // Check if the property that changed is bDrawDebugBoxes
-    if (PropertyName == GET_MEMBER_NAME_CHECKED(AGrid, bDrawDebugBoxes))
-    {
-        UpdateDebugGridCells();
-    }
 
     // Check if you remake the grid
     if (PropertyName == GET_MEMBER_NAME_CHECKED(AGrid, Width) ||
@@ -304,12 +268,6 @@ void AGrid::OnConstruction(const FTransform& Transform)
 {
     // Whenever the actor is placed, moved or modified
     Super::OnConstruction(Transform);
-
-    // If Debug enabled on construction
-    if (bDrawDebugBoxes) {
-        UpdateDebugGridCells();
-    }
-
 }
 void AGrid::PostLoad()
 {
