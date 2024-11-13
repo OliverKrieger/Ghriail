@@ -107,14 +107,14 @@ void UGridDebugVisualiserComponent::AddHIMCVisualMesh(const FTransform& Instance
     switch (CellType)
     {
     case ECellType::Air:
-        if (HIMC_Air && HIMC_Air->GetStaticMesh())
+        if (HIMC_Air && HIMC_Air->GetStaticMesh() && bShowAirTiles)
         {
             HIMC_Air->AddInstance(InstanceTransform);
         }
         break;
 
     case ECellType::Walkable:
-        if (HIMC_Walkable && HIMC_Walkable->GetStaticMesh())
+        if (HIMC_Walkable && HIMC_Walkable->GetStaticMesh() && bShowWalkableTiles)
         {
             FTransform Transform(InstanceTransform.GetLocation() - FVector(0, 0, GridInterface->GetGridCellSize() / 2));
             HIMC_Walkable->AddInstance(Transform);
@@ -122,7 +122,7 @@ void UGridDebugVisualiserComponent::AddHIMCVisualMesh(const FTransform& Instance
         break;
 
     case ECellType::Impassable:
-        if (HIMC_Impassable && HIMC_Impassable->GetStaticMesh())
+        if (HIMC_Impassable && HIMC_Impassable->GetStaticMesh() && bShowImpassableTiles)
         {
             HIMC_Impassable->AddInstance(InstanceTransform);
         }

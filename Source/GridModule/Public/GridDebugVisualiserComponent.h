@@ -53,6 +53,15 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Debug Visualisation")
 	float DebugVisualisationDistanceMax = 10000.0f;
 
+	UPROPERTY(EditAnywhere, Category = "Debug Visualisation")
+	bool bShowAirTiles = true;
+
+	UPROPERTY(EditAnywhere, Category = "Debug Visualisation")
+	bool bShowWalkableTiles = true;
+
+	UPROPERTY(EditAnywhere, Category = "Debug Visualisation")
+	bool bShowImpassableTiles = true;
+
 	/* ----------------------------- */
 	/* ----------------------------- */
 	/* DEBUG PUBLIC FUNCTIONS */
