@@ -78,6 +78,7 @@ private:
 
 	// Non-BP
 	IGridInterface* GridInterface;
+	TArray<UHierarchicalInstancedStaticMeshComponent*> HIMComponents;
 
 	/* ----------------------------- */
 	/* ----------------------------- */
@@ -85,10 +86,11 @@ private:
 	/* ----------------------------- */
 	/* ----------------------------- */
 	void GetParentActor();
+	void SetHIMCComponentParameters(UHierarchicalInstancedStaticMeshComponent* HISMComponent);
+	UHierarchicalInstancedStaticMeshComponent* CreateHIMComponent(FName ComponentName, FString MeshPath, FString MaterialPath);
 
 #if WITH_EDITOR
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
-	virtual void PostLoad() override;
 #endif
 
 };

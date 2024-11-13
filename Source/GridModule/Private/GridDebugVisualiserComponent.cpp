@@ -14,46 +14,19 @@ UGridDebugVisualiserComponent::UGridDebugVisualiserComponent()
     GetParentActor();
 
     // Construct all of the HIMC components for visualisation
-    HIMC_Air = CreateDefaultSubobject<UHierarchicalInstancedStaticMeshComponent>(TEXT("HIMC_Air"));
-    HIMC_Air->SetCullDistances(DebugVisualisationDistanceMin, DebugVisualisationDistanceMax); // Adjust culling range
-    HIMC_Air->bAffectDistanceFieldLighting = false; // Optimize lighting
-    HIMC_Air->SetMobility(EComponentMobility::Static);
-    static ConstructorHelpers::FObjectFinder<UStaticMesh> MeshFinderAir(TEXT("/Game/Blockout/static/Cube_10.Cube_10"));
-    if (MeshFinderAir.Succeeded())
-    {
-        HIMC_Air->SetStaticMesh(MeshFinderAir.Object);
-        UE_LOG(GridModule_LogCategory, Log, TEXT("Mesh found for Air"));
-    }
-    else {
-        UE_LOG(GridModule_LogCategory, Warning, TEXT("Unable to find a mesh at path for Air - No mesh at /Game/Blockout/static/Cube_10.Cube_10"));
-    }
+    HIMC_Air = CreateHIMComponent(TEXT("HIMC_Air"), TEXT("/Game/Blockout/static/Cube_10.Cube_10"), TEXT("/Game/Blockout/material/MI/MI_UB_Blue.MI_UB_Blue"));
+    HIMC_Walkable = CreateHIMComponent(TEXT("HIMC_Walkable"), TEXT("/Game/Blockout/static/Plane_90_Z1.Plane_90_Z1"), TEXT("/Game/Blockout/material/MI/MI_UB_Yellow.MI_UB_Yellow"));
+    HIMC_Impassable = CreateHIMComponent(TEXT("HIMC_Impassable"), TEXT("/Game/Blockout/static/Cube_100.Cube_100"), TEXT("/Game/Blockout/material/MI/MI_UB_Red.MI_UB_Red"));
 
-    HIMC_Walkable = CreateDefaultSubobject<UHierarchicalInstancedStaticMeshComponent>(TEXT("HIMC_Walkable"));
-    HIMC_Walkable->SetCullDistances(DebugVisualisationDistanceMin, DebugVisualisationDistanceMax);
-    HIMC_Walkable->bAffectDistanceFieldLighting = false;
-    HIMC_Walkable->SetMobility(EComponentMobility::Static);
-    static ConstructorHelpers::FObjectFinder<UStaticMesh> MeshFinderWalkable(TEXT("/Game/Blockout/static/Plane_90_Z1.Plane_90_Z1"));
-    if (MeshFinderWalkable.Succeeded())
-    {
-        HIMC_Walkable->SetStaticMesh(MeshFinderWalkable.Object);
-        UE_LOG(GridModule_LogCategory, Log, TEXT("Mesh found for Walkable"));
-    }
-    else {
-        UE_LOG(GridModule_LogCategory, Warning, TEXT("Unable to find a mesh at path for Walkable - No mesh at /Game/Blockout/static/Plane_90_Z1.Plane_90_Z1"));
-    }
+    // Add all components for quick editing
+    HIMComponents.Add(HIMC_Air);
+    HIMComponents.Add(HIMC_Walkable);
+    HIMComponents.Add(HIMC_Impassable);
 
-    HIMC_Impassable = CreateDefaultSubobject<UHierarchicalInstancedStaticMeshComponent>(TEXT("HIMC_Impassable"));
-    HIMC_Impassable->SetCullDistances(DebugVisualisationDistanceMin, DebugVisualisationDistanceMax);
-    HIMC_Impassable->bAffectDistanceFieldLighting = false;
-    HIMC_Impassable->SetMobility(EComponentMobility::Static);
-    static ConstructorHelpers::FObjectFinder<UStaticMesh> MeshFinderImpassable(TEXT("/Game/Blockout/static/Cube_100.Cube_100"));
-    if (MeshFinderImpassable.Succeeded())
+    // Apply parameters across all HIMC
+    for (UHierarchicalInstancedStaticMeshComponent* HISMComponent : HIMComponents)
     {
-        HIMC_Impassable->SetStaticMesh(MeshFinderImpassable.Object);
-        UE_LOG(GridModule_LogCategory, Log, TEXT("Mesh found for Impassable"));
-    }
-    else {
-        UE_LOG(GridModule_LogCategory, Warning, TEXT("Unable to find a mesh at path for Impassable - No mesh at /Game/Blockout/static/Cube_100.Cube_100"));
+        SetHIMCComponentParameters(HISMComponent);
     }
 }
 
@@ -175,6 +148,53 @@ void UGridDebugVisualiserComponent::GetParentActor()
     }
 }
 
+void UGridDebugVisualiserComponent::SetHIMCComponentParameters(UHierarchicalInstancedStaticMeshComponent* HIMComponent)
+{
+    HIMComponent->SetCullDistances(DebugVisualisationDistanceMin, DebugVisualisationDistanceMax); // Set cull distance
+    HIMComponent->bAffectDistanceFieldLighting = false; // optimise lighting
+    HIMComponent->SetMobility(EComponentMobility::Static); // Set mobility
+    HIMComponent->SetCastShadow(false);  // Disable shadow casting
+    HIMComponent->SetReceivesDecals(false); // Disable decals
+    //HIMComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision); // Disable collisions
+}
+
+UHierarchicalInstancedStaticMeshComponent* UGridDebugVisualiserComponent::CreateHIMComponent(FName ComponentName, FString MeshPath, FString MaterialPath)
+{
+    // Create the HISM component
+    UHierarchicalInstancedStaticMeshComponent* HISMComponent = CreateDefaultSubobject<UHierarchicalInstancedStaticMeshComponent>(ComponentName);
+
+    // Attempt to find the static mesh at the specified path
+    UStaticMesh* Mesh = Cast<UStaticMesh>(StaticLoadObject(UStaticMesh::StaticClass(), nullptr, *MeshPath));
+    if (Mesh)
+    {
+        // If the mesh is found, set it on the HISM component
+        HISMComponent->SetStaticMesh(Mesh);
+        UE_LOG(GridModule_LogCategory, Log, TEXT("Mesh found for %s"), *MeshPath);
+    }
+    else
+    {
+        // If the mesh is not found, log a warning
+        UE_LOG(GridModule_LogCategory, Warning, TEXT("Unable to find a mesh at path %s"), *MeshPath);
+    }
+
+    UMaterialInstance* MaterialInstance = Cast<UMaterialInstance>(StaticLoadObject(UMaterialInstance::StaticClass(), nullptr, *MaterialPath));
+    if (MaterialInstance)
+    {
+        if (HISMComponent && MaterialInstance)
+        {
+            // Apply the material instance to the first material slot (slot 0)
+            HISMComponent->SetMaterial(0, MaterialInstance);
+            UE_LOG(GridModule_LogCategory, Log, TEXT("Material Instance %s found!"), *MaterialPath);
+        }
+    }
+    else
+    {
+        UE_LOG(GridModule_LogCategory, Warning, TEXT("Material Instance %s could not be found!"), *MaterialPath);
+    }
+
+    return HISMComponent;
+}
+
 void UGridDebugVisualiserComponent::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
 {
     Super::PostEditChangeProperty(PropertyChangedEvent);
@@ -199,10 +219,3 @@ void UGridDebugVisualiserComponent::PostEditChangeProperty(FPropertyChangedEvent
         HIMC_Impassable->SetCullDistances(DebugVisualisationDistanceMin, DebugVisualisationDistanceMax);
     }
 }
-
-void UGridDebugVisualiserComponent::PostLoad()
-{
-    Super::PostLoad();
-    UE_LOG(GridModule_LogCategory, Log, TEXT("PostLoad bDrawDebugBoxes: %s"), bDrawDebugBoxes ? TEXT("true") : TEXT("false"));
-}
-
