@@ -30,3 +30,8 @@ For NuGet, if visual studio is in `offline mode` you need to either have nuget p
 - Make sure the checkbox next to `new online source` is checked.
 - In the **Solution Explorer** right click the solution and select **Restore NuGet Packages**. This will download any missing packages.
 - To verify, you can go **Tools > NuGet Package Manager > Manage NuGetPackages for Solution** and check that the **Browse** tab has packages from online sources 
+
+# Useful Resources
+
+### All Unreal UProperty Modifiers
+https://benui.ca/unreal/uproperty/

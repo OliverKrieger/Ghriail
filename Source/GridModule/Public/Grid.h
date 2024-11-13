@@ -40,16 +40,16 @@ public:
 	TArray<FGridCell> GridCells;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Grid", meta = (ClampMin = "1"))
-	int Width = 1;
+	int32 Width = 1;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Grid", meta = (ClampMin = "1"))
-	int Depth = 1;
+	int32 Depth = 1;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Grid", meta = (ClampMin = "1"))
-	int Height = 1;
+	int32 Height = 1;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Grid", meta = (ClampMin = "1"))
-	float CellSize = 100.f; // The size of each cell in the grid
+	float CellSize = 100.f;
 
 
 	/* PUBLIC HELPER FUNCTIONS */
@@ -85,9 +85,8 @@ private:
 	/* PRIVATE DEBUG */
 	/* ----------------------------- */
 	/* ----------------------------- */
-	UPROPERTY(VisibleAnywhere, Category = "Grid", Transient)
+	UPROPERTY(VisibleAnywhere, Category = "Grid")
 	UGridDebugVisualiserComponent* GridDebugVisualiser;
-
 
 	/* ----------------------------- */
 	/* ----------------------------- */
@@ -110,7 +109,6 @@ private:
 #if WITH_EDITOR
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
 	virtual void OnConstruction(const FTransform& Transform) override;
-	virtual void PostLoad() override;
 #endif
 
 };

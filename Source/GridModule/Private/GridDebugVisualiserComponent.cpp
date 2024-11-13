@@ -18,14 +18,14 @@ UGridDebugVisualiserComponent::UGridDebugVisualiserComponent()
     HIMC_Air->SetCullDistances(DebugVisualisationDistanceMin, DebugVisualisationDistanceMax); // Adjust culling range
     HIMC_Air->bAffectDistanceFieldLighting = false; // Optimize lighting
     HIMC_Air->SetMobility(EComponentMobility::Static);
-    static ConstructorHelpers::FObjectFinder<UStaticMesh> MeshFinderAir(TEXT("/Game/Blockout/static/Cube_50.Cube_50"));
+    static ConstructorHelpers::FObjectFinder<UStaticMesh> MeshFinderAir(TEXT("/Game/Blockout/static/Cube_10.Cube_10"));
     if (MeshFinderAir.Succeeded())
     {
         HIMC_Air->SetStaticMesh(MeshFinderAir.Object);
         UE_LOG(GridModule_LogCategory, Log, TEXT("Mesh found for Air"));
     }
     else {
-        UE_LOG(GridModule_LogCategory, Warning, TEXT("Unable to find a mesh at path for Air"));
+        UE_LOG(GridModule_LogCategory, Warning, TEXT("Unable to find a mesh at path for Air - No mesh at /Game/Blockout/static/Cube_10.Cube_10"));
     }
 
     HIMC_Walkable = CreateDefaultSubobject<UHierarchicalInstancedStaticMeshComponent>(TEXT("HIMC_Walkable"));
@@ -39,7 +39,7 @@ UGridDebugVisualiserComponent::UGridDebugVisualiserComponent()
         UE_LOG(GridModule_LogCategory, Log, TEXT("Mesh found for Walkable"));
     }
     else {
-        UE_LOG(GridModule_LogCategory, Warning, TEXT("Unable to find a mesh at path for Walkable"));
+        UE_LOG(GridModule_LogCategory, Warning, TEXT("Unable to find a mesh at path for Walkable - No mesh at /Game/Blockout/static/Plane_90_Z1.Plane_90_Z1"));
     }
 
     HIMC_Impassable = CreateDefaultSubobject<UHierarchicalInstancedStaticMeshComponent>(TEXT("HIMC_Impassable"));
@@ -53,7 +53,7 @@ UGridDebugVisualiserComponent::UGridDebugVisualiserComponent()
         UE_LOG(GridModule_LogCategory, Log, TEXT("Mesh found for Impassable"));
     }
     else {
-        UE_LOG(GridModule_LogCategory, Warning, TEXT("Unable to find a mesh at path for Impassable"));
+        UE_LOG(GridModule_LogCategory, Warning, TEXT("Unable to find a mesh at path for Impassable - No mesh at /Game/Blockout/static/Cube_100.Cube_100"));
     }
 }
 
@@ -188,7 +188,21 @@ void UGridDebugVisualiserComponent::PostEditChangeProperty(FPropertyChangedEvent
     // Check if the property that changed is bDrawDebugBoxes
     if (PropertyName == GET_MEMBER_NAME_CHECKED(UGridDebugVisualiserComponent, bDrawDebugBoxes))
     {
+        UE_LOG(GridModule_LogCategory, Log, TEXT("Grid Size: %d"), GridInterface->GetGridSize());
+        UE_LOG(GridModule_LogCategory, Log, TEXT("Grid Cells: %d"), GridInterface->GetGridCells().Num());
         UpdateDebugGridCells();
     }
+    else if (PropertyName == GET_MEMBER_NAME_CHECKED(UGridDebugVisualiserComponent, DebugVisualisationDistanceMin) || PropertyName == GET_MEMBER_NAME_CHECKED(UGridDebugVisualiserComponent, DebugVisualisationDistanceMax))
+    {
+        HIMC_Air->SetCullDistances(DebugVisualisationDistanceMin, DebugVisualisationDistanceMax);
+        HIMC_Walkable->SetCullDistances(DebugVisualisationDistanceMin, DebugVisualisationDistanceMax);
+        HIMC_Impassable->SetCullDistances(DebugVisualisationDistanceMin, DebugVisualisationDistanceMax);
+    }
+}
+
+void UGridDebugVisualiserComponent::PostLoad()
+{
+    Super::PostLoad();
+    UE_LOG(GridModule_LogCategory, Log, TEXT("PostLoad bDrawDebugBoxes: %s"), bDrawDebugBoxes ? TEXT("true") : TEXT("false"));
 }
 

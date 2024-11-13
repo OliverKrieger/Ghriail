@@ -39,7 +39,12 @@ public:
 	/* DEBUG PUBLIC VALUES */
 	/* ----------------------------- */
 	/* ----------------------------- */
-	UPROPERTY(EditAnywhere, Category = "Debug Visualisation")
+	
+	// Transient so specifically DrawDebugBoxes is not loaded on construction
+	// and manually has to be activated by the user. This is to avoid slow
+	// load time on editor open for large grids, but also because in editor
+	// the grid loads before the collisions are loaded.
+	UPROPERTY(EditAnywhere, Category = "Debug Visualisation", Transient)
 	bool bDrawDebugBoxes = false;
 
 	UPROPERTY(EditAnywhere, Category = "Debug Visualisation")
@@ -83,6 +88,7 @@ private:
 
 #if WITH_EDITOR
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
+	virtual void PostLoad() override;
 #endif
 
 };

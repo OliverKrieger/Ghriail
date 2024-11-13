@@ -15,8 +15,6 @@ AGrid::AGrid()
     RootComponent->bVisualizeComponent = true;
 
     GridDebugVisualiser = CreateDefaultSubobject<UGridDebugVisualiserComponent>(TEXT("GridDebugVisualiser"));
-
-    UpdateGrid();
 }
 
 void AGrid::UpdateGrid()
@@ -122,7 +120,6 @@ TArray<FGridCell> AGrid::GetGridCells() const
     return GridCells;
 }
 
-
 /* ----------------------------- */
 /* ----------------------------- */
 /* LINE TRACING */
@@ -138,7 +135,7 @@ void AGrid::PerformRayTraceForTopCells()
         return;
     }
 
-    UE_LOG(GridModule_LogCategory, Log, TEXT("Begin grid cell calculation"));
+    UE_LOG(GridModule_LogCategory, Log, TEXT("Begin grid cell calculation - Number of Cells to Calculate: %d"), GetGridSize1D());
     // Capture the top layer indices range
     int32 TopLayerStartIndex = GetTopLayerStartIndex();
 
@@ -167,7 +164,7 @@ void AGrid::PerformRayTraceForTopCells()
     //    }
     //}
 
-    UE_LOG(GridModule_LogCategory, Log, TEXT("Grid cell calculation complete!"));
+    UE_LOG(GridModule_LogCategory, Log, TEXT("UPDATE COMPLETE - Grid cell calculation complete!"));
 }
 
 void AGrid::PerformDownwardLineTrace(const int32& GridIndex)
@@ -268,10 +265,9 @@ void AGrid::OnConstruction(const FTransform& Transform)
 {
     // Whenever the actor is placed, moved or modified
     Super::OnConstruction(Transform);
-}
-void AGrid::PostLoad()
-{
-    // Add anything here that you want post level load, warning however is that this can call twice at times
-    Super::PostLoad();
+
+    // Runs on spawn and edit
+    UpdateGrid();
+    
 }
 #endif
