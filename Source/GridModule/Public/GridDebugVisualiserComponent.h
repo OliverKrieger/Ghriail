@@ -71,9 +71,7 @@ private:
 	/* ----------------------------- */
 
 	UHierarchicalInstancedStaticMeshComponent* HIMC_Air;
-
 	UHierarchicalInstancedStaticMeshComponent* HIMC_Walkable;
-
 	UHierarchicalInstancedStaticMeshComponent* HIMC_Impassable;
 
 	// Non-BP

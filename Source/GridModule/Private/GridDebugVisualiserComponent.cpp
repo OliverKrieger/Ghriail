@@ -155,7 +155,7 @@ void UGridDebugVisualiserComponent::SetHIMCComponentParameters(UHierarchicalInst
     HIMComponent->SetMobility(EComponentMobility::Static); // Set mobility
     HIMComponent->SetCastShadow(false);  // Disable shadow casting
     HIMComponent->SetReceivesDecals(false); // Disable decals
-    //HIMComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision); // Disable collisions
+    HIMComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision); // Disable collisions
 }
 
 UHierarchicalInstancedStaticMeshComponent* UGridDebugVisualiserComponent::CreateHIMComponent(FName ComponentName, FString MeshPath, FString MaterialPath)
