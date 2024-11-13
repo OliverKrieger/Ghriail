@@ -36,7 +36,11 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	/* PUBLIC VALUES */
+/* ----------------------------- */
+/* ----------------------------- */
+/* VARIABLES */
+/* ----------------------------- */
+/* ----------------------------- */
 	TArray<FGridCell> GridCells;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Grid", meta = (ClampMin = "1"))
@@ -51,27 +55,46 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Grid", meta = (ClampMin = "1"))
 	float CellSize = 100.f;
 
+	UPROPERTY(EditAnywhere, Category = "Debug")
+	bool bDrawDebugRaytrace = false;
 
-	/* PUBLIC HELPER FUNCTIONS */
+private:
+	UPROPERTY(VisibleAnywhere, Category = "Grid")
+	UGridDebugVisualiserComponent* GridDebugVisualiser;
 
+/* ----------------------------- */
+/* ----------------------------- */
+/* LINETRACE FUNCTIONS */
+/* ----------------------------- */
+/* ----------------------------- */
+private:
+	void PerformRayTraceForTopCells();
+	void PerformDownwardLineTrace(const int32& StartPosition);
+	ECellType PerformRaycast(const FVector& worldStartPosition);
+
+/* ----------------------------- */
+/* ----------------------------- */
+/* HELPER FUNCTIONS */
+/* ----------------------------- */
+/* ----------------------------- */
+public:
 	// Access grid cells by (x, y, z) coordinates
 	FGridCell& GetCell(int x, int y, int z);
 	FVector GetCellPosition(int32 X, int32 Y, int32 Z) const;
 	FVector Convert1DIndexTo3D(int32 index);
 	FVector ConvertGridPositionToWorld(FVector GridPosition);
 
-	/* DEBUG PUBLIC VALUES */
+private:
+	int32 GetTopLayerStartIndex();
+	int32 GetGridSize1D();
+	FVector3f GetGridSize3D();
 
-	UPROPERTY(EditAnywhere, Category = "Debug")
-	bool bDrawDebugRaytrace = false;
-
-
-
-	/* ----------------------------- */
-	/* ----------------------------- */
-	/* INTERFACE OVERRIDES */
-	/* ----------------------------- */
-	/* ----------------------------- */
+/* ----------------------------- */
+/* ----------------------------- */
+/* INTERFACE OVERRIDES */
+/* ----------------------------- */
+/* ----------------------------- */
+public:
 	virtual int32 GetGridDepth() const override;
 	virtual int32 GetGridWidth() const override;
 	virtual int32 GetGridHeight() const override;
@@ -79,33 +102,12 @@ public:
 	virtual float GetGridCellSize() const override;
 	virtual TArray<FGridCell> GetGridCells() const override;
 
+/* ----------------------------- */
+/* ----------------------------- */
+/* EDITOR ONLY FUNCTIONS */
+/* ----------------------------- */
+/* ----------------------------- */
 private:
-	/* ----------------------------- */
-	/* ----------------------------- */
-	/* PRIVATE DEBUG */
-	/* ----------------------------- */
-	/* ----------------------------- */
-	UPROPERTY(VisibleAnywhere, Category = "Grid")
-	UGridDebugVisualiserComponent* GridDebugVisualiser;
-
-	/* ----------------------------- */
-	/* ----------------------------- */
-	/* PRIVATE LINETRACE FUNCTIONS */
-	/* ----------------------------- */
-	/* ----------------------------- */
-	void PerformRayTraceForTopCells();
-	void PerformDownwardLineTrace(const int32& StartPosition);
-	ECellType PerformRaycast(const FVector& worldStartPosition);
-
-	/* ----------------------------- */
-	/* ----------------------------- */
-	/* PRIVATE HELPER FUNCTIONS */
-	/* ----------------------------- */
-	/* ----------------------------- */
-	int32 GetTopLayerStartIndex();
-	int32 GetGridSize1D();
-	FVector3f GetGridSize3D();
-
 #if WITH_EDITOR
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
 	virtual void OnConstruction(const FTransform& Transform) override;

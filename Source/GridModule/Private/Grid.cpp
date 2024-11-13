@@ -38,7 +38,90 @@ void AGrid::BeginPlay()
 void AGrid::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+}
 
+/* ----------------------------- */
+/* ----------------------------- */
+/* LINE TRACING */
+/* ----------------------------- */
+/* ----------------------------- */
+
+void AGrid::PerformRayTraceForTopCells()
+{
+    // Error check for if grid cells is being accessed before it has been intialised!
+    if (GridCells.Num() == 0)
+    {
+        UE_LOG(GridModule_LogCategory, Error, TEXT("Grid Cell is empty, cannot perform cell calculation!"));
+        return;
+    }
+
+    UE_LOG(GridModule_LogCategory, Log, TEXT("Begin grid cell calculation - Number of Cells to Calculate: %d"), GetGridSize1D());
+    // Capture the top layer indices range
+    int32 TopLayerStartIndex = GetTopLayerStartIndex();
+
+    // ParallelFor to parallelize the outer loop
+    ParallelFor(GetGridSize1D() - TopLayerStartIndex, [this, TopLayerStartIndex](int32 i)
+        {
+            // Calculate the top cell index
+            int topHeightIndex = TopLayerStartIndex + i;
+
+            // Perform downward ray trace for each height in this column
+            for (int heightIterIndex = 0; heightIterIndex < Height; heightIterIndex++)
+            {
+                int32 currentIndex = topHeightIndex - heightIterIndex * (Depth * Width); // Calculate the 1D index
+
+                // Perform the ray trace and update the grid cell
+                PerformDownwardLineTrace(currentIndex);
+            }
+        });
+
+    UE_LOG(GridModule_LogCategory, Log, TEXT("UPDATE COMPLETE - Grid cell calculation complete!"));
+}
+
+void AGrid::PerformDownwardLineTrace(const int32& GridIndex)
+{
+    FGridCell GridCellData;
+    GridCellData.Cost = 1; // TODO cost dependant on Type
+    GridCellData.Position = ConvertGridPositionToWorld(Convert1DIndexTo3D(GridIndex)) + FVector(CellSize / 2); // move the position of the grid to the center of the box
+    GridCellData.Type = PerformRaycast(GridCellData.Position + FVector(0, 0, CellSize / 2)); // move the z to the top of the box
+
+    if (GridIndex < GridCells.Num()) {
+        GridCells[GridIndex] = GridCellData;
+    }
+    else {
+        UE_LOG(GridModule_LogCategory, Error, TEXT("Line trace attempting to access grid index %d which is outside the bounds of the grid!"), GridIndex);
+    }
+}
+
+ECellType AGrid::PerformRaycast(const FVector& worldStartPosition)
+{
+    FVector Start = worldStartPosition;
+    FVector End = FVector(worldStartPosition.X, worldStartPosition.Y, (worldStartPosition.Z - CellSize));
+
+    FCollisionQueryParams CollisionParams;
+    CollisionParams.AddIgnoredActor(this); // Ignore the actor performing the raycast
+
+    UWorld* World = this->GetWorld();
+    FHitResult OutHit;
+
+    bool bHit = World->LineTraceSingleByChannel(OutHit, Start, End, ECC_Visibility, CollisionParams);
+
+#if WITH_EDITOR
+    if (bHit)
+    {
+        if (bDrawDebugRaytrace) {
+            DrawDebugLine(World, Start, End, FColor::Green, false, 1.0f, 0, 1.0f);
+        }
+        return ECellType::Walkable; // TODO if previous walkable, impassable || TODO create class for blocker that has cell type and if that, put that down instead (rough terrain, etc)
+    }
+    else
+    {
+        if (bDrawDebugRaytrace) {
+            DrawDebugLine(World, Start, End, FColor::Red, false, 1.0f, 0, 1.0f);
+        }
+        return ECellType::Air;
+    }
+#endif
 }
 
 /* ----------------------------- */
@@ -87,6 +170,27 @@ FVector AGrid::ConvertGridPositionToWorld(FVector GridPosition)
 
 /* ----------------------------- */
 /* ----------------------------- */
+/* PRIVATE HELPER FUNCTIONS */
+/* ----------------------------- */
+/* ----------------------------- */
+
+int32 AGrid::GetTopLayerStartIndex()
+{
+    return (Height - 1) * Width * Depth; // for instance if 4x4x4, then starting index in flat array is 48 (because array size is 64)
+}
+
+int32 AGrid::GetGridSize1D()
+{
+    return Depth * Width * Height;
+}
+
+FVector3f AGrid::GetGridSize3D()
+{
+    return FVector3f(Depth, Width, Height);
+}
+
+/* ----------------------------- */
+/* ----------------------------- */
 /* INTERFACE CALLS */
 /* ----------------------------- */
 /* ----------------------------- */
@@ -119,121 +223,6 @@ TArray<FGridCell> AGrid::GetGridCells() const
 {
     return GridCells;
 }
-
-/* ----------------------------- */
-/* ----------------------------- */
-/* LINE TRACING */
-/* ----------------------------- */
-/* ----------------------------- */
-
-void AGrid::PerformRayTraceForTopCells()
-{
-    // Error check for if grid cells is being accessed before it has been intialised!
-    if (GridCells.Num() == 0)
-    {
-        UE_LOG(GridModule_LogCategory, Error, TEXT("Grid Cell is empty, cannot perform cell calculation!"));
-        return;
-    }
-
-    UE_LOG(GridModule_LogCategory, Log, TEXT("Begin grid cell calculation - Number of Cells to Calculate: %d"), GetGridSize1D());
-    // Capture the top layer indices range
-    int32 TopLayerStartIndex = GetTopLayerStartIndex();
-
-    // ParallelFor to parallelize the outer loop
-    ParallelFor(GetGridSize1D() - TopLayerStartIndex, [this, TopLayerStartIndex](int32 i)
-    {
-        // Calculate the top cell index
-        int topHeightIndex = TopLayerStartIndex + i;
-
-        // Perform downward ray trace for each height in this column
-        for (int heightIterIndex = 0; heightIterIndex < Height; heightIterIndex++)
-        {
-            int32 currentIndex = topHeightIndex - heightIterIndex * (Depth * Width); // Calculate the 1D index
-
-            // Perform the ray trace and update the grid cell
-            PerformDownwardLineTrace(currentIndex);
-        }
-    });
-
-    //for (int topHeightIndex = GetTopLayerStartIndex(); topHeightIndex < GetGridSize1D(); topHeightIndex++)
-    //{
-    //    for (int heightIterIndex = 0; heightIterIndex < Height; heightIterIndex++)
-    //    {
-    //        int32 currentIndex = topHeightIndex - heightIterIndex * (Depth * Width); // starting height - how far down the height are we
-    //        PerformDownwardLineTrace(currentIndex);
-    //    }
-    //}
-
-    UE_LOG(GridModule_LogCategory, Log, TEXT("UPDATE COMPLETE - Grid cell calculation complete!"));
-}
-
-void AGrid::PerformDownwardLineTrace(const int32& GridIndex)
-{
-    FGridCell GridCellData;
-    GridCellData.Cost = 1; // TODO cost dependant on Type
-    GridCellData.Position = ConvertGridPositionToWorld(Convert1DIndexTo3D(GridIndex)) + FVector(CellSize/2); // move the position of the grid to the center of the box
-    GridCellData.Type = PerformRaycast(GridCellData.Position+FVector(0,0,CellSize/2)); // move the z to the top of the box
-
-    if (GridIndex < GridCells.Num()) {
-        GridCells[GridIndex] = GridCellData;
-    }
-    else {
-        UE_LOG(GridModule_LogCategory, Error, TEXT("Line trace attempting to access grid index %d which is outside the bounds of the grid!"), GridIndex);
-    }
-}
-
-ECellType AGrid::PerformRaycast(const FVector& worldStartPosition)
-{
-    FVector Start = worldStartPosition;
-    FVector End = FVector(worldStartPosition.X, worldStartPosition.Y, (worldStartPosition.Z - CellSize));
-
-    FCollisionQueryParams CollisionParams;
-    CollisionParams.AddIgnoredActor(this); // Ignore the actor performing the raycast
-
-    UWorld* World = this->GetWorld();
-    FHitResult OutHit;
-
-    bool bHit = World->LineTraceSingleByChannel(OutHit, Start, End, ECC_Visibility, CollisionParams);
-
-#if WITH_EDITOR
-    if (bHit)
-    {
-        if (bDrawDebugRaytrace) {
-            DrawDebugLine(World, Start, End, FColor::Green, false, 1.0f, 0, 1.0f);
-        }
-        return ECellType::Walkable; // TODO if previous walkable, impassable || TODO create class for blocker that has cell type and if that, put that down instead (rough terrain, etc)
-    }
-    else
-    {
-        if (bDrawDebugRaytrace) {
-            DrawDebugLine(World, Start, End, FColor::Red, false, 1.0f, 0, 1.0f);
-        }
-        return ECellType::Air;
-    }
-#endif
-}
-
-/* ----------------------------- */
-/* ----------------------------- */
-/* PRIVATE HELPER FUNCTIONS */
-/* ----------------------------- */
-/* ----------------------------- */
-
-int32 AGrid::GetTopLayerStartIndex()
-{
-    return (Height-1) * Width * Depth; // for instance if 4x4x4, then starting index in flat array is 48 (because array size is 64)
-}
-
-int32 AGrid::GetGridSize1D()
-{
-    return Depth * Width * Height;
-}
-
-FVector3f AGrid::GetGridSize3D()
-{
-    return FVector3f(Depth, Width, Height);
-}
-
 
 /* ----------------------------- */
 /* ----------------------------- */
