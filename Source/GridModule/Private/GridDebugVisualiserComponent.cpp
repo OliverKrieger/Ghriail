@@ -203,7 +203,7 @@ void UGridDebugVisualiserComponent::PostEditChangeProperty(FPropertyChangedEvent
         ? PropertyChangedEvent.Property->GetFName()
         : NAME_None;
 
-    UE_LOG(GridModule_LogCategory, Log, TEXT("Property change: %s"), *PropertyName.ToString());
+    UE_LOG(GridModule_LogCategory, Log, TEXT("GridDebugVisualiser - Property change: %s"), *PropertyName.ToString());
 
     // Check if the property that changed is bDrawDebugBoxes
     if (PropertyName == GET_MEMBER_NAME_CHECKED(UGridDebugVisualiserComponent, bDrawDebugBoxes))
@@ -217,5 +217,12 @@ void UGridDebugVisualiserComponent::PostEditChangeProperty(FPropertyChangedEvent
         HIMC_Air->SetCullDistances(DebugVisualisationDistanceMin, DebugVisualisationDistanceMax);
         HIMC_Walkable->SetCullDistances(DebugVisualisationDistanceMin, DebugVisualisationDistanceMax);
         HIMC_Impassable->SetCullDistances(DebugVisualisationDistanceMin, DebugVisualisationDistanceMax);
+    }
+    else if (
+        PropertyName == GET_MEMBER_NAME_CHECKED(UGridDebugVisualiserComponent, bShowAirTiles) ||
+        PropertyName == GET_MEMBER_NAME_CHECKED(UGridDebugVisualiserComponent, bShowWalkableTiles) ||
+        PropertyName == GET_MEMBER_NAME_CHECKED(UGridDebugVisualiserComponent, bShowImpassableTiles))
+    {
+        UpdateDebugGridCells();
     }
 }

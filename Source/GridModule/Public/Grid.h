@@ -58,9 +58,20 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Debug")
 	bool bDrawDebugRaytrace = false;
 
+	UPROPERTY(EditAnywhere, Category = "Debug")
+	float LineTraceLifetime = 1.0f;
+
 private:
 	UPROPERTY(VisibleAnywhere, Category = "Grid")
 	UGridDebugVisualiserComponent* GridDebugVisualiser;
+
+	// Non-BP
+	
+	// due to there being no good callback for a module that should be editor and runtime for when level is loaded, 
+	// best fix is to wait for the contructor to run twice on editor load for first time instanciation. Alternative
+	// would be to use OnLevelLoaded, but that would require adding editor module to the Grid Module, which could have
+	// unforseen consquences for runtime.
+	int OnContructionRunNumber = 0;
 
 /* ----------------------------- */
 /* ----------------------------- */
@@ -111,6 +122,7 @@ private:
 #if WITH_EDITOR
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
 	virtual void OnConstruction(const FTransform& Transform) override;
+	virtual void PostLoad() override;
 #endif
 
 };

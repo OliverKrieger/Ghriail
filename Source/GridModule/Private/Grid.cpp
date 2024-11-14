@@ -64,6 +64,7 @@ void AGrid::PerformRayTraceForTopCells()
         {
             // Calculate the top cell index
             int topHeightIndex = TopLayerStartIndex + i;
+            UE_LOG(GridModule_LogCategory, Log, TEXT("Starting index draw for: %d"), topHeightIndex);
 
             // Perform downward ray trace for each height in this column
             for (int heightIterIndex = 0; heightIterIndex < Height; heightIterIndex++)
@@ -95,7 +96,7 @@ void AGrid::PerformDownwardLineTrace(const int32& GridIndex)
 
 ECellType AGrid::PerformRaycast(const FVector& worldStartPosition, const int32& GridIndex)
 {
-    FVector Start = worldStartPosition;
+    FVector Start = worldStartPosition + FVector(0,0,-5); // adjust line trace distance from start so that it does not clip into geometry above
     FVector End = FVector(worldStartPosition.X, worldStartPosition.Y, (worldStartPosition.Z - CellSize));
 
     FCollisionQueryParams CollisionParams;
@@ -105,12 +106,13 @@ ECellType AGrid::PerformRaycast(const FVector& worldStartPosition, const int32& 
     FHitResult OutHit;
 
     bool bHit = World->LineTraceSingleByChannel(OutHit, Start, End, ECC_Visibility, CollisionParams);
+    UE_LOG(GridModule_LogCategory, Log, TEXT("Drawn index for: %d | For world position: %s"), GridIndex, *worldStartPosition.ToString());
 
 #if WITH_EDITOR
     if (bHit)
     {
         if (bDrawDebugRaytrace) {
-            DrawDebugLine(World, Start, End, FColor::Green, false, 1.0f, 0, 1.0f);
+            DrawDebugLine(World, Start, End, FColor::Green, false, LineTraceLifetime, 0, 1.0f);
         }
 
         // handle impassable
@@ -126,7 +128,7 @@ ECellType AGrid::PerformRaycast(const FVector& worldStartPosition, const int32& 
     else
     {
         if (bDrawDebugRaytrace) {
-            DrawDebugLine(World, Start, End, FColor::Red, false, 1.0f, 0, 1.0f);
+            DrawDebugLine(World, Start, End, FColor::Red, false, LineTraceLifetime, 0, 1.0f);
         }
         return ECellType::Air;
     }
@@ -248,7 +250,7 @@ void AGrid::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
         ? PropertyChangedEvent.Property->GetFName()
         : NAME_None;
 
-    UE_LOG(GridModule_LogCategory, Log, TEXT("Property change: %s"), *PropertyName.ToString());
+    UE_LOG(GridModule_LogCategory, Log, TEXT("Grid - Property change: %s"), *PropertyName.ToString());
 
     // Check if you remake the grid
     if (PropertyName == GET_MEMBER_NAME_CHECKED(AGrid, Width) ||
@@ -263,9 +265,16 @@ void AGrid::OnConstruction(const FTransform& Transform)
 {
     // Whenever the actor is placed, moved or modified
     Super::OnConstruction(Transform);
-
-    // Runs on spawn and edit
-    UpdateGrid();
+    UE_LOG(GridModule_LogCategory, Log, TEXT("Grid - On Construct called!"));
+    if (OnContructionRunNumber < 2) {
+        UpdateGrid();
+        OnContructionRunNumber++;
+    }
     
+}
+void AGrid::PostLoad()
+{
+    Super::PostLoad();
+    UE_LOG(GridModule_LogCategory, Log, TEXT("Grid - Post Load called!"));
 }
 #endif
