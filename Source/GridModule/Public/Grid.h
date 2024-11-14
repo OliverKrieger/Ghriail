@@ -70,7 +70,7 @@ private:
 private:
 	void PerformRayTraceForTopCells();
 	void PerformDownwardLineTrace(const int32& StartPosition);
-	ECellType PerformRaycast(const FVector& worldStartPosition);
+	ECellType PerformRaycast(const FVector& worldStartPosition, const int32& GridIndex);
 
 /* ----------------------------- */
 /* ----------------------------- */

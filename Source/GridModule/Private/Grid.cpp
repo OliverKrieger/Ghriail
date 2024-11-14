@@ -83,7 +83,7 @@ void AGrid::PerformDownwardLineTrace(const int32& GridIndex)
     FGridCell GridCellData;
     GridCellData.Cost = 1; // TODO cost dependant on Type
     GridCellData.Position = ConvertGridPositionToWorld(Convert1DIndexTo3D(GridIndex)) + FVector(CellSize / 2); // move the position of the grid to the center of the box
-    GridCellData.Type = PerformRaycast(GridCellData.Position + FVector(0, 0, CellSize / 2)); // move the z to the top of the box
+    GridCellData.Type = PerformRaycast(GridCellData.Position + FVector(0, 0, CellSize / 2), GridIndex); // move the z to the top of the box
 
     if (GridIndex < GridCells.Num()) {
         GridCells[GridIndex] = GridCellData;
@@ -93,7 +93,7 @@ void AGrid::PerformDownwardLineTrace(const int32& GridIndex)
     }
 }
 
-ECellType AGrid::PerformRaycast(const FVector& worldStartPosition)
+ECellType AGrid::PerformRaycast(const FVector& worldStartPosition, const int32& GridIndex)
 {
     FVector Start = worldStartPosition;
     FVector End = FVector(worldStartPosition.X, worldStartPosition.Y, (worldStartPosition.Z - CellSize));
@@ -112,6 +112,15 @@ ECellType AGrid::PerformRaycast(const FVector& worldStartPosition)
         if (bDrawDebugRaytrace) {
             DrawDebugLine(World, Start, End, FColor::Green, false, 1.0f, 0, 1.0f);
         }
+
+        // handle impassable
+        int32 AboveGridIndex = GridIndex + (Width * Depth);
+        if (AboveGridIndex < GetGridSize1D()) {
+            if (GridCells[AboveGridIndex].Type == ECellType::Walkable || GridCells[AboveGridIndex].Type == ECellType::Impassable) {
+                return ECellType::Impassable;
+            }
+        }
+
         return ECellType::Walkable; // TODO if previous walkable, impassable || TODO create class for blocker that has cell type and if that, put that down instead (rough terrain, etc)
     }
     else

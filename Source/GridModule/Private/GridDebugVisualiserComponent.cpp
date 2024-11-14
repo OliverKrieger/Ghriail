@@ -16,7 +16,7 @@ UGridDebugVisualiserComponent::UGridDebugVisualiserComponent()
     // Construct all of the HIMC components for visualisation
     HIMC_Air = CreateHIMComponent(TEXT("HIMC_Air"), TEXT("/Game/Blockout/static/Cube_10.Cube_10"), TEXT("/Game/Blockout/material/MI/MI_UB_Blue.MI_UB_Blue"));
     HIMC_Walkable = CreateHIMComponent(TEXT("HIMC_Walkable"), TEXT("/Game/Blockout/static/Plane_90_Z1.Plane_90_Z1"), TEXT("/Game/Blockout/material/MI/MI_UB_Yellow.MI_UB_Yellow"));
-    HIMC_Impassable = CreateHIMComponent(TEXT("HIMC_Impassable"), TEXT("/Game/Blockout/static/Cube_100.Cube_100"), TEXT("/Game/Blockout/material/MI/MI_UB_Red.MI_UB_Red"));
+    HIMC_Impassable = CreateHIMComponent(TEXT("HIMC_Impassable"), TEXT("/Game/Blockout/static/Cube_101_Center.Cube_101_Center"), TEXT("/Game/Blockout/material/MI/MI_UB_Red.MI_UB_Red"));
 
     // Add all components for quick editing
     HIMComponents.Add(HIMC_Air);
