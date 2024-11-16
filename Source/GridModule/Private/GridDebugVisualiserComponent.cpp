@@ -70,8 +70,18 @@ void UGridDebugVisualiserComponent::UpdateDebugGridCells()
         HIMC_Walkable->SetVisibility(false);
         HIMC_Impassable->SetVisibility(false);
 
-        for (const FGridCell& Cell : GridInterface->GetGridCells()) {
-            FVector Location(Cell.Position);
+        TArray<FGridCell> GridCells = GridInterface->GetGridCells();
+        for (int32 Grid1DIndex = 0; Grid1DIndex < GridCells.Num(); Grid1DIndex++) {
+
+            // Convert Grid 1D Index to 3D world position
+            FGridCell Cell = GridCells[Grid1DIndex];
+            FVector Grid3DIndex = GridInterface->Convert1DIndexTo3D(Grid1DIndex);
+            FVector GridIndexToWorldPos = GridInterface->Convert3DGridPositionToWorld(Grid3DIndex);
+
+            FVector Location(GridIndexToWorldPos);
+            // Since grid index is the left corner, we want to move the position to the center of cell
+            // This avoid having to recalculate impassable and air later
+            Location += FVector(GridInterface->GetGridCellSize()/2); 
             FTransform Transform(Location);
             AddHIMCVisualMesh(Transform, Cell.Type);
         }

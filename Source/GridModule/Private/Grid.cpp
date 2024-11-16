@@ -83,7 +83,7 @@ void AGrid::PerformDownwardLineTrace(const int32& GridIndex)
 {
     FGridCell GridCellData;
     GridCellData.Cost = 1; // TODO cost dependant on Type
-    GridCellData.Position = ConvertGridPositionToWorld(Convert1DIndexTo3D(GridIndex)) + FVector(CellSize / 2); // move the position of the grid to the center of the box
+    GridCellData.Position = Convert3DGridPositionToWorld(Convert1DIndexTo3D(GridIndex)) + FVector(CellSize / 2); // move the position of the grid to the center of the box
     GridCellData.Type = PerformRaycast(GridCellData.Position + FVector(0, 0, CellSize / 2), GridIndex); // move the z to the top of the box
 
     if (GridIndex < GridCells.Num()) {
@@ -166,19 +166,6 @@ FVector AGrid::GetCellPosition(int32 X, int32 Y, int32 Z) const
     return FVector();
 }
 
-FVector AGrid::Convert1DIndexTo3D(int32 index)
-{
-    int32 z = index / (Depth * Width); // Height
-    int32 y = (index % (Depth * Width)) / Depth; // Width
-    int32 x = index % Depth; // Depth
-    return FVector(x, y, z);
-}
-
-FVector AGrid::ConvertGridPositionToWorld(FVector GridPosition)
-{
-    return FVector(GridPosition.X * CellSize, GridPosition.Y * CellSize, GridPosition.Z * CellSize);
-}
-
 /* ----------------------------- */
 /* ----------------------------- */
 /* PRIVATE HELPER FUNCTIONS */
@@ -233,6 +220,19 @@ float AGrid::GetGridCellSize() const
 TArray<FGridCell> AGrid::GetGridCells() const
 {
     return GridCells;
+}
+
+FVector AGrid::Convert1DIndexTo3D(const int32& index) const
+{
+    int32 z = index / (Depth * Width); // Height
+    int32 y = (index % (Depth * Width)) / Depth; // Width
+    int32 x = index % Depth; // Depth
+    return FVector(x, y, z);
+}
+
+FVector AGrid::Convert3DGridPositionToWorld(const FVector& GridPosition) const
+{
+    return FVector(GridPosition.X * CellSize, GridPosition.Y * CellSize, GridPosition.Z * CellSize);
 }
 
 /* ----------------------------- */

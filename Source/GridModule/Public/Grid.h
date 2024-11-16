@@ -92,8 +92,6 @@ public:
 	// Access grid cells by (x, y, z) coordinates
 	FGridCell& GetCell(int x, int y, int z);
 	FVector GetCellPosition(int32 X, int32 Y, int32 Z) const;
-	FVector Convert1DIndexTo3D(int32 index);
-	FVector ConvertGridPositionToWorld(FVector GridPosition);
 
 private:
 	int32 GetTopLayerStartIndex();
@@ -112,6 +110,8 @@ public:
 	virtual int32 GetGridSize() const override;
 	virtual float GetGridCellSize() const override;
 	virtual TArray<FGridCell> GetGridCells() const override;
+	virtual FVector Convert1DIndexTo3D(const int32& index) const override;
+	virtual FVector Convert3DGridPositionToWorld(const FVector& GridPosition) const override;
 
 /* ----------------------------- */
 /* ----------------------------- */
