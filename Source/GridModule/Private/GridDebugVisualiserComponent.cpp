@@ -73,17 +73,18 @@ void UGridDebugVisualiserComponent::UpdateDebugGridCells()
         TArray<FGridCell> GridCells = GridInterface->GetGridCells();
         for (int32 Grid1DIndex = 0; Grid1DIndex < GridCells.Num(); Grid1DIndex++) {
 
-            // Convert Grid 1D Index to 3D world position
+            // Get Current Cell
             FGridCell Cell = GridCells[Grid1DIndex];
-            FVector Grid3DIndex = GridInterface->Convert1DIndexTo3D(Grid1DIndex);
-            FVector GridIndexToWorldPos = GridInterface->Convert3DGridPositionToWorld(Grid3DIndex);
+            
+            FVector Grid3DIndex = GridInterface->Convert1DIndexTo3D(Grid1DIndex); // Convert 1D index to 3D index
+            FVector Location = GridInterface->Convert3DGridPositionToWorld(Grid3DIndex); // Convert 3D index to world
 
-            FVector Location(GridIndexToWorldPos);
             // Since grid index is the left corner, we want to move the position to the center of cell
             // This avoid having to recalculate impassable and air later
-            Location += FVector(GridInterface->GetGridCellSize()/2); 
+            Location += FVector(GridInterface->GetGridCellSize() / 2);
             FTransform Transform(Location);
-            AddHIMCVisualMesh(Transform, Cell.Type);
+            
+            AddHIMCVisualMesh(Transform, Cell);
         }
 
         // UnHide all HIMC meshes when complete
@@ -112,9 +113,9 @@ bool UGridDebugVisualiserComponent::HasMeshAvailability()
     return true;
 }
 
-void UGridDebugVisualiserComponent::AddHIMCVisualMesh(const FTransform& InstanceTransform, const ECellType& CellType)
+void UGridDebugVisualiserComponent::AddHIMCVisualMesh(const FTransform& InstanceTransform, const FGridCell& Cell)
 {
-    switch (CellType)
+    switch (Cell.Type)
     {
     case ECellType::Air:
         if (HIMC_Air && HIMC_Air->GetStaticMesh() && bShowAirTiles)
@@ -126,7 +127,15 @@ void UGridDebugVisualiserComponent::AddHIMCVisualMesh(const FTransform& Instance
     case ECellType::Walkable:
         if (HIMC_Walkable && HIMC_Walkable->GetStaticMesh() && bShowWalkableTiles)
         {
-            FTransform Transform(InstanceTransform.GetLocation() - FVector(0, 0, GridInterface->GetGridCellSize() / 2));
+            FTransform Transform;
+            if (!Cell.Rotation.IsNearlyZero()) {
+                Transform.SetLocation(Cell.Position);
+                Transform.SetRotation(Cell.Rotation.Quaternion());
+                UE_LOG(GridModule_LogCategory, Log, TEXT("Cell has rotation: %s"), *Cell.Rotation.Quaternion().ToString());
+            }
+            else {
+                Transform.SetLocation(InstanceTransform.GetLocation() - FVector(0, 0, GridInterface->GetGridCellSize() / 2));// move the tile to the bottom of the box
+            }
             HIMC_Walkable->AddInstance(Transform);
         }
         break;

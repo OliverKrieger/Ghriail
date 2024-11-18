@@ -17,6 +17,9 @@ struct FGridCell
     FVector Position;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Grid")
+    FRotator Rotation;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Grid")
     float Cost;
 
     // Enumeration for cell types (walkable, impassable, etc.)
@@ -25,6 +28,7 @@ struct FGridCell
 
     FGridCell() {
         Position = FVector(.0f, .0f, .0f);
+        Rotation = FRotator::ZeroRotator;
         Cost = 1;
         Type = ECellType::Uninitialised;
     }

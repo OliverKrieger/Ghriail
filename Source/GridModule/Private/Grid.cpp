@@ -72,19 +72,19 @@ void AGrid::PerformRayTraceForTopCells()
                 int32 currentIndex = topHeightIndex - heightIterIndex * (Depth * Width); // Calculate the 1D index
 
                 // Perform the ray trace and update the grid cell
-                PerformDownwardLineTrace(currentIndex);
+                SetupDataForLineTrace(currentIndex);
             }
         });
 
     UE_LOG(GridModule_LogCategory, Log, TEXT("UPDATE COMPLETE - Grid cell calculation complete!"));
 }
 
-void AGrid::PerformDownwardLineTrace(const int32& GridIndex)
+void AGrid::SetupDataForLineTrace(const int32& GridIndex)
 {
     FGridCell GridCellData;
     GridCellData.Cost = 1; // TODO cost dependant on Type
     GridCellData.Position = Convert3DGridPositionToWorld(Convert1DIndexTo3D(GridIndex)) + FVector(CellSize / 2); // move the position of the grid to the center of the box
-    GridCellData.Type = PerformRaycast(GridCellData.Position + FVector(0, 0, CellSize / 2), GridIndex); // move the z to the top of the box
+    PerformSingleLineTrace(GridIndex, GridCellData); // move the z to the top of the box
 
     if (GridIndex < GridCells.Num()) {
         GridCells[GridIndex] = GridCellData;
@@ -94,10 +94,11 @@ void AGrid::PerformDownwardLineTrace(const int32& GridIndex)
     }
 }
 
-ECellType AGrid::PerformRaycast(const FVector& worldStartPosition, const int32& GridIndex)
+void AGrid::PerformSingleLineTrace(const int32& GridIndex, FGridCell& GridCellData)
 {
+    FVector worldStartPosition = GridCellData.Position + FVector(0, 0, CellSize / 2); // Make the linetrace start from top of the box
     FVector Start = worldStartPosition + FVector(0,0,-5); // adjust line trace distance from start so that it does not clip into geometry above
-    FVector End = FVector(worldStartPosition.X, worldStartPosition.Y, (worldStartPosition.Z - CellSize));
+    FVector End = FVector(worldStartPosition.X, worldStartPosition.Y, (worldStartPosition.Z - CellSize)); // take the x and y of the box, but move z to the bottom
 
     FCollisionQueryParams CollisionParams;
     CollisionParams.AddIgnoredActor(this); // Ignore the actor performing the raycast
@@ -115,22 +116,56 @@ ECellType AGrid::PerformRaycast(const FVector& worldStartPosition, const int32& 
             DrawDebugLine(World, Start, End, FColor::Green, false, LineTraceLifetime, 0, 1.0f);
         }
 
-        // handle impassable
+        GridCellData.Position = OutHit.Location; // Store hit location in world space
+        
+        // Calculate the dot product between the normal and the Z-axis
+        float DotProduct = FVector::DotProduct(OutHit.ImpactNormal, FVector(0, 0, 1));
+
+        // Check if the hit surface is sloped (not flat)
+        const float SlopeThreshold = 0.99f; // Adjust this threshold if needed
+        if (DotProduct < SlopeThreshold)
+        {
+            FVector HitNormal = OutHit.ImpactNormal;
+
+            // Calculate a forward vector for the plane
+            FVector ForwardVector = FVector::CrossProduct(FVector::UpVector, HitNormal).GetSafeNormal();
+
+            // If the forward vector ends up being zero, choose a fallback direction
+            if (ForwardVector.IsNearlyZero())
+            {
+                ForwardVector = FVector::CrossProduct(FVector::RightVector, HitNormal).GetSafeNormal();
+            }
+
+            // Create a rotation using the MakeFromXZ function and convert it to a rotator
+            FRotator Rotator = FRotationMatrix::MakeFromXZ(ForwardVector, HitNormal).Rotator();
+
+            // Store rotation if not flat
+            GridCellData.Rotation = Rotator;
+        }
+
+        // Handle impassable by checking if above is
+        // either walkable or impassable.
+        // Not doing just is not air check, because special tiles
+        // (might be stacked on top of each other)
         int32 AboveGridIndex = GridIndex + (Width * Depth);
         if (AboveGridIndex < GetGridSize1D()) {
             if (GridCells[AboveGridIndex].Type == ECellType::Walkable || GridCells[AboveGridIndex].Type == ECellType::Impassable) {
-                return ECellType::Impassable;
+                GridCellData.Type = ECellType::Impassable;
+                return;
             }
         }
 
-        return ECellType::Walkable; // TODO if previous walkable, impassable || TODO create class for blocker that has cell type and if that, put that down instead (rough terrain, etc)
+        // If nothing above and we hit
+        GridCellData.Type = ECellType::Walkable; // TODO create class for blocker that has cell type and if that, put that down instead (rough terrain, etc)
+        return;
     }
     else
     {
         if (bDrawDebugRaytrace) {
             DrawDebugLine(World, Start, End, FColor::Red, false, LineTraceLifetime, 0, 1.0f);
         }
-        return ECellType::Air;
+        GridCellData.Type = ECellType::Air;
+        return;
     }
 #endif
 }

@@ -80,8 +80,8 @@ private:
 /* ----------------------------- */
 private:
 	void PerformRayTraceForTopCells();
-	void PerformDownwardLineTrace(const int32& StartPosition);
-	ECellType PerformRaycast(const FVector& worldStartPosition, const int32& GridIndex);
+	void SetupDataForLineTrace(const int32& StartPosition);
+	void PerformSingleLineTrace(const int32& GridIndex, FGridCell& GridCellData);
 
 /* ----------------------------- */
 /* ----------------------------- */

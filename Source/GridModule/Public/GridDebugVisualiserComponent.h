@@ -69,7 +69,7 @@ public:
 	/* ----------------------------- */
 	void UpdateDebugGridCells();
 	bool HasMeshAvailability();
-	void AddHIMCVisualMesh(const FTransform& InstanceTransform, const ECellType& CellType);
+	void AddHIMCVisualMesh(const FTransform& InstanceTransform, const FGridCell& Cell);
 
 	
 private:
