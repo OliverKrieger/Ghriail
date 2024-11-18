@@ -64,7 +64,6 @@ void AGrid::PerformRayTraceForTopCells()
         {
             // Calculate the top cell index
             int topHeightIndex = TopLayerStartIndex + i;
-            UE_LOG(GridModule_LogCategory, Log, TEXT("Starting index draw for: %d"), topHeightIndex);
 
             // Perform downward ray trace for each height in this column
             for (int heightIterIndex = 0; heightIterIndex < Height; heightIterIndex++)
@@ -107,48 +106,22 @@ void AGrid::PerformSingleLineTrace(const int32& GridIndex, FGridCell& GridCellDa
     FHitResult OutHit;
 
     bool bHit = World->LineTraceSingleByChannel(OutHit, Start, End, ECC_Visibility, CollisionParams);
-    UE_LOG(GridModule_LogCategory, Log, TEXT("Drawn index for: %d | For world position: %s"), GridIndex, *worldStartPosition.ToString());
 
-#if WITH_EDITOR
     if (bHit)
     {
+#if WITH_EDITOR
         if (bDrawDebugRaytrace) {
             DrawDebugLine(World, Start, End, FColor::Green, false, LineTraceLifetime, 0, 1.0f);
         }
-
-        GridCellData.Position = OutHit.Location; // Store hit location in world space
-        
-        // Calculate the dot product between the normal and the Z-axis
-        float DotProduct = FVector::DotProduct(OutHit.ImpactNormal, FVector(0, 0, 1));
-
-        // Check if the hit surface is sloped (not flat)
-        const float SlopeThreshold = 0.99f; // Adjust this threshold if needed
-        if (DotProduct < SlopeThreshold)
-        {
-            FVector HitNormal = OutHit.ImpactNormal;
-
-            // Calculate a forward vector for the plane
-            FVector ForwardVector = FVector::CrossProduct(FVector::UpVector, HitNormal).GetSafeNormal();
-
-            // If the forward vector ends up being zero, choose a fallback direction
-            if (ForwardVector.IsNearlyZero())
-            {
-                ForwardVector = FVector::CrossProduct(FVector::RightVector, HitNormal).GetSafeNormal();
-            }
-
-            // Create a rotation using the MakeFromXZ function and convert it to a rotator
-            FRotator Rotator = FRotationMatrix::MakeFromXZ(ForwardVector, HitNormal).Rotator();
-
-            // Store rotation if not flat
-            GridCellData.Rotation = Rotator;
-        }
+#endif
+        HandlePositionalInformation(GridCellData, OutHit);
 
         // Handle impassable by checking if above is
         // either walkable or impassable.
         // Not doing just is not air check, because special tiles
         // (might be stacked on top of each other)
         int32 AboveGridIndex = GridIndex + (Width * Depth);
-        if (AboveGridIndex < GetGridSize1D()) {
+        if (AboveGridIndex < GetGridSize1D()) { // check that this is not the top cell
             if (GridCells[AboveGridIndex].Type == ECellType::Walkable || GridCells[AboveGridIndex].Type == ECellType::Impassable) {
                 GridCellData.Type = ECellType::Impassable;
                 return;
@@ -161,13 +134,14 @@ void AGrid::PerformSingleLineTrace(const int32& GridIndex, FGridCell& GridCellDa
     }
     else
     {
+#if WITH_EDITOR
         if (bDrawDebugRaytrace) {
             DrawDebugLine(World, Start, End, FColor::Red, false, LineTraceLifetime, 0, 1.0f);
         }
+#endif
         GridCellData.Type = ECellType::Air;
         return;
     }
-#endif
 }
 
 /* ----------------------------- */
@@ -220,6 +194,41 @@ int32 AGrid::GetGridSize1D()
 FVector3f AGrid::GetGridSize3D()
 {
     return FVector3f(Depth, Width, Height);
+}
+
+FRotator AGrid::CalcRotationFromImpactNormal(const FVector& HitNormal)
+{
+    // Calculate a forward vector for the plane
+    FVector ForwardVector = FVector::CrossProduct(FVector::UpVector, HitNormal).GetSafeNormal();
+
+    // If the forward vector ends up being zero, choose a fallback direction
+    if (ForwardVector.IsNearlyZero())
+    {
+        ForwardVector = FVector::CrossProduct(FVector::RightVector, HitNormal).GetSafeNormal();
+    }
+
+    // Create a rotation using the MakeFromXZ function and convert it to a rotator
+    return FRotationMatrix::MakeFromXZ(ForwardVector, HitNormal).Rotator();
+}
+
+void AGrid::HandlePositionalInformation(FGridCell& GridCellData, const FHitResult& OutHit)
+{
+    GridCellData.Position = OutHit.Location; // Store hit location in world space
+    FVector HitNormal = OutHit.ImpactNormal;
+
+    // Calculate the dot product between the normal and the Z-axis
+    // We are calculating the angle between the impact normal
+    // and the line trace.
+    float DotProduct = FVector::DotProduct(HitNormal, FVector(0, 0, 1));
+
+    // Check if the hit surface is sloped (not flat)
+    // We do not want to store a rotation if technically
+    // There should not be one.
+    const float SlopeThreshold = 0.99f; // Adjust this threshold if needed
+    if (DotProduct < SlopeThreshold)
+    {
+        GridCellData.Rotation = CalcRotationFromImpactNormal(HitNormal); // Store rotation if not flat
+    }
 }
 
 /* ----------------------------- */

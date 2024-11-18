@@ -94,9 +94,14 @@ public:
 	FVector GetCellPosition(int32 X, int32 Y, int32 Z) const;
 
 private:
+	// Grid Calculations
 	int32 GetTopLayerStartIndex();
 	int32 GetGridSize1D();
 	FVector3f GetGridSize3D();
+
+	// Readability Functions
+	FRotator CalcRotationFromImpactNormal(const FVector& HitNormal);
+	void HandlePositionalInformation(FGridCell& GridCellData, const FHitResult& OutHit);
 
 /* ----------------------------- */
 /* ----------------------------- */

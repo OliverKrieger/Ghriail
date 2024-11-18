@@ -131,7 +131,6 @@ void UGridDebugVisualiserComponent::AddHIMCVisualMesh(const FTransform& Instance
             if (!Cell.Rotation.IsNearlyZero()) {
                 Transform.SetLocation(Cell.Position);
                 Transform.SetRotation(Cell.Rotation.Quaternion());
-                UE_LOG(GridModule_LogCategory, Log, TEXT("Cell has rotation: %s"), *Cell.Rotation.Quaternion().ToString());
             }
             else {
                 Transform.SetLocation(InstanceTransform.GetLocation() - FVector(0, 0, GridInterface->GetGridCellSize() / 2));// move the tile to the bottom of the box
