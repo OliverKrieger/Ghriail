@@ -115,6 +115,9 @@ void AGrid::PerformSingleLineTrace(const int32& GridIndex, FGridCell& GridCellDa
         }
 #endif
         HandlePositionalInformation(GridCellData, OutHit);
+        if (HandleSpecialHit(GridCellData, OutHit)) {
+            return; // return early, as we already know type and cost
+        }
 
         // Handle impassable by checking if above is
         // either walkable or impassable.
@@ -172,7 +175,7 @@ FGridCell& AGrid::GetCell(int x, int y, int z)
 
 FVector AGrid::GetCellPosition(int32 X, int32 Y, int32 Z) const
 {
-    return FVector();
+    return FVector(); // TODO
 }
 
 /* ----------------------------- */
@@ -229,6 +232,20 @@ void AGrid::HandlePositionalInformation(FGridCell& GridCellData, const FHitResul
     {
         GridCellData.Rotation = CalcRotationFromImpactNormal(HitNormal); // Store rotation if not flat
     }
+}
+
+bool AGrid::HandleSpecialHit(FGridCell& GridCellData, const FHitResult& OutHit)
+{
+    AGridSpecial* HitSpecialGrid = Cast<AGridSpecial>(OutHit.GetActor());
+    if (HitSpecialGrid)
+    {
+        UE_LOG(GridModule_LogCategory, Log, TEXT("Grid - Special hit!"));
+        GridCellData.Type = HitSpecialGrid->CellType;
+        GridCellData.Cost = HitSpecialGrid->Cost;
+        return true;
+    }
+
+    return false;
 }
 
 /* ----------------------------- */

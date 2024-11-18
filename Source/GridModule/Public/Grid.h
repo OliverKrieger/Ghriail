@@ -13,6 +13,7 @@
 #include "GridCell.h"
 #include "IGridInterface.h"
 #include "GridDebugVisualiserComponent.h"
+#include "GridSpecial.h"
 
 #include "Grid.generated.h"
 
@@ -102,6 +103,7 @@ private:
 	// Readability Functions
 	FRotator CalcRotationFromImpactNormal(const FVector& HitNormal);
 	void HandlePositionalInformation(FGridCell& GridCellData, const FHitResult& OutHit);
+	bool HandleSpecialHit(FGridCell& GridCellData, const FHitResult& OutHit);
 
 /* ----------------------------- */
 /* ----------------------------- */
