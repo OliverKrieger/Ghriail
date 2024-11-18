@@ -178,6 +178,11 @@ FVector AGrid::GetCellPosition(int32 X, int32 Y, int32 Z) const
     return FVector(); // TODO
 }
 
+void AGrid::RecalculateGrid()
+{
+    UpdateGrid();
+}
+
 /* ----------------------------- */
 /* ----------------------------- */
 /* PRIVATE HELPER FUNCTIONS */

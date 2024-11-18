@@ -94,6 +94,10 @@ public:
 	FGridCell& GetCell(int x, int y, int z);
 	FVector GetCellPosition(int32 X, int32 Y, int32 Z) const;
 
+	// Update Grid Within Editor
+	UFUNCTION(CallInEditor, BlueprintCallable, Category = "Grid")
+	void RecalculateGrid();
+
 private:
 	// Grid Calculations
 	int32 GetTopLayerStartIndex();
