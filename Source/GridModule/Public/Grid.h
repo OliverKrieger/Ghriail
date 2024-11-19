@@ -132,6 +132,7 @@ public:
 	virtual TArray<FGridCell> GetGridCells() const override;
 	virtual FVector Convert1DIndexTo3D(const int32& index) const override;
 	virtual FVector Convert3DGridPositionToWorld(const FVector& GridPosition) const override;
+	virtual FVector ConvertWorldTo3DGrid(const FVector& WorldPosition) const override;
 
 /* ----------------------------- */
 /* ----------------------------- */

@@ -371,7 +371,18 @@ FVector AGrid::Convert1DIndexTo3D(const int32& index) const
 
 FVector AGrid::Convert3DGridPositionToWorld(const FVector& GridPosition) const
 {
-    return FVector(GridPosition.X * CellSize, GridPosition.Y * CellSize, GridPosition.Z * CellSize);
+    return (GridPosition * FVector(CellSize)) + GetActorLocation(); // first turn to 3D gird, then add offset
+}
+
+FVector AGrid::ConvertWorldTo3DGrid(const FVector& WorldPosition) const
+{
+    FVector Grid3DPosition = (WorldPosition + GetActorLocation()) / FVector(CellSize); // first remove offset, then divide by cell size to get grid index
+    // Make sure the values are integers
+    return FVector(
+        FMath::RoundToInt(Grid3DPosition.X),
+        FMath::RoundToInt(Grid3DPosition.Y),
+        FMath::RoundToInt(Grid3DPosition.Z)
+    );
 }
 
 /* ----------------------------- */

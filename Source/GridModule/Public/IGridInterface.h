@@ -26,4 +26,5 @@ public:
     virtual TArray<FGridCell> GetGridCells() const = 0;
     virtual FVector Convert1DIndexTo3D(const int32& index) const = 0;
     virtual FVector Convert3DGridPositionToWorld(const FVector& GridPosition) const = 0;
+    virtual FVector ConvertWorldTo3DGrid(const FVector& WorldPosition) const = 0;
 };
