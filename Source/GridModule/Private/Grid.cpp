@@ -147,6 +147,12 @@ void AGrid::PerformSingleLineTrace(const int32& GridIndex, FGridCell& GridCellDa
     }
 }
 
+/* ----------------------------- */
+/* ----------------------------- */
+/* NEIGHBOUR CONNECTION FUNCTIONS */
+/* ----------------------------- */
+/* ----------------------------- */
+
 void AGrid::AddAllNeighbours()
 {
     for (int32 GridIndex = 0; GridIndex < GetGridSize1D(); GridIndex++) {
