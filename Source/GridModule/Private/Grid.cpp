@@ -19,10 +19,10 @@ AGrid::AGrid()
 
 void AGrid::UpdateGrid()
 {
-    //FlushPersistentDebugLines(GetWorld()); // flush before everything else so that update grid cells does not have to handle it and thus not clear other debug
     GridCells.Empty(); // Empty all cells before calculation
     GridCells.SetNum(GetGridSize1D());
     PerformRayTraceForTopCells();
+    AddAllNeighbours(); // After cells calculated, add neighbours, does take longer than adding indecies at line trace, but could not calculate types otherwise
     GridDebugVisualiser->UpdateDebugGridCells();
 }
 
@@ -144,6 +144,73 @@ void AGrid::PerformSingleLineTrace(const int32& GridIndex, FGridCell& GridCellDa
 #endif
         GridCellData.Type = ECellType::Air;
         return;
+    }
+}
+
+void AGrid::AddAllNeighbours()
+{
+    for (int32 GridIndex = 0; GridIndex < GetGridSize1D(); GridIndex++) {
+        AddNeighbours(GridIndex);
+    }
+}
+
+void AGrid::AddNeighbours(const int32& GridIndex)
+{
+    FVector Grid3DIndex = Convert1DIndexTo3D(GridIndex);
+
+    // Loop through all possible combinations of (-1, 0, 1) for x, y, z
+    // All potential combinations, total of 27 with excluding (0,0,0):
+    // (-1,-1,-1), (-1,-1,0), (-1,-1,1), (-1,0,-1), (-1,0,0), (-1,0,1), (-1,1,-1), (-1,1,0), (-1,1,1), (0,-1,-1), (0,-1,0), (0,-1,1), 
+    // (0,0,-1), (0,0,1), (0,1,-1), (0,1,0), (0,1,1), (1,-1,-1), (1,-1,0), (1,-1,1), (1,0,-1), (1,0,0), (1,0,1), (1,1,-1), (1,1,0), (1,1,1)
+    for (int dx = -1; dx <= 1; ++dx)
+    {
+        for (int dy = -1; dy <= 1; ++dy)
+        {
+            for (int dz = -1; dz <= 1; ++dz)
+            {
+                // Skip the center cell (0, 0, 0)
+                if (dx == 0 && dy == 0 && dz == 0)
+                {
+                    continue;
+                }
+
+                // Calculate new coordinates
+                int NewX = Grid3DIndex.X + dx;
+                int NewY = Grid3DIndex.Y + dy;
+                int NewZ = Grid3DIndex.Z + dz;
+
+                // Check if the new coordinates are within bounds
+                if (NewX >= 0 && NewX < Width && NewY >= 0 && NewY < Depth && NewZ >= 0 && NewZ < Height)
+                {
+                    // Convert 3D coordinates to a 1D index
+                    int NeighborIndex = NewX + NewY * Width + NewZ * Width * Depth;
+
+                    // Each index is on it's own layer, so we know which type we are connected to.
+                    // When traversing, we can easily filter the lists, by for instance, only taking 
+                    // the walkable tiles or if we have a unit that can fly, we combine walkable and air
+                    // indecies and traverse that.
+                    if (GridCells[NeighborIndex].Type == ECellType::Walkable) {
+                        GridCells[GridIndex].WalkableNeighbourIndecies.Add(NeighborIndex);
+                    }
+                    else if (GridCells[NeighborIndex].Type == ECellType::Air) {
+                        GridCells[GridIndex].AirNeighbourIndecies.Add(NeighborIndex);
+                    }
+                    else if (GridCells[NeighborIndex].Type == ECellType::Impassable) {
+                        GridCells[GridIndex].ImpassableNeighbourIndecies.Add(NeighborIndex);
+                    }
+                    else {
+                        UEnum* EnumPtr = StaticEnum<ECellType>();
+                        if (EnumPtr) {
+                            FString EnumName = EnumPtr->GetNameByValue(static_cast<int64>(GridCells[NeighborIndex].Type)).ToString();
+                            UE_LOG(GridModule_LogCategory, Warning, TEXT("WARNING - Encountered grid cell type while adding neighbours that is unrecognised: %s"), *EnumName);
+                        }
+                        else {
+                            UE_LOG(GridModule_LogCategory, Warning, TEXT("WARNING - Encountered grid cell type while adding neighbours that is unrecognised, and enum metadata could not be found."));
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 

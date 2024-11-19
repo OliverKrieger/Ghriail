@@ -26,10 +26,22 @@ struct FGridCell
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Grid")
     ECellType Type;
 
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Grid")
+    TArray<int32> WalkableNeighbourIndecies;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Grid")
+    TArray<int32> AirNeighbourIndecies;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Grid")
+    TArray<int32> ImpassableNeighbourIndecies;
+
     FGridCell() {
         Position = FVector(.0f, .0f, .0f);
         Rotation = FRotator::ZeroRotator;
         Cost = 1;
         Type = ECellType::Uninitialised;
+        WalkableNeighbourIndecies.Empty();
+        AirNeighbourIndecies.Empty();
+        ImpassableNeighbourIndecies.Empty();
     }
 };
