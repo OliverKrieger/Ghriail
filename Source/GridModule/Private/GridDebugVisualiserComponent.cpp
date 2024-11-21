@@ -76,8 +76,8 @@ void UGridDebugVisualiserComponent::UpdateDebugGridCells()
             // Get Current Cell
             FGridCell Cell = GridCells[Grid1DIndex];
             
-            FVector Grid3DIndex = GridInterface->Convert1DIndexTo3D(Grid1DIndex); // Convert 1D index to 3D index
-            FVector Location = GridInterface->Convert3DGridPositionToWorld(Grid3DIndex); // Convert 3D index to world
+            FIntVector Grid3DIndex = GridInterface->Convert1DIndexTo3D(Grid1DIndex); // Convert 1D index to 3D index
+            FVector Location = GridInterface->Convert3DGridIndexToWorldPos(Grid3DIndex); // Convert 3D index to world
 
             // Since grid index is the left corner, we want to move the position to the center of cell
             // This avoid having to recalculate impassable and air later
@@ -161,7 +161,7 @@ void UGridDebugVisualiserComponent::GetParentActor()
         GridInterface = Cast<IGridInterface>(ParentActor);
         if (!GridInterface)
         {
-            UE_LOG(GridModule_LogCategory, Error, TEXT("Parent actor is does not implement IGridInterface!"));
+            UE_LOG(GridModule_LogCategory, Error, TEXT("GridDebugVisualiser - Parent actor is does not implement IGridInterface!"));
         }
     }
 }

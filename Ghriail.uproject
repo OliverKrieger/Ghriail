@@ -1,35 +1,55 @@
 {
-	"FileVersion": 3,
-	"EngineAssociation": "5.4",
-	"Category": "",
-	"Description": "",
-	"Modules": [
-		{
-			"Name": "Ghriail",
-			"Type": "Runtime",
-			"LoadingPhase": "Default"
-		},
-		{
-			"Name": "PathfindingModule",
-			"Type": "Runtime",
-			"LoadingPhase": "Default"
-		},
-		{
-			"Name": "GridModule",
-			"Type": "Runtime",
-			"LoadingPhase": "Default",
-			"AdditionalDependencies": [
-				"Engine"
-			]
-		}
-	],
-	"Plugins": [
-		{
-			"Name": "ModelingToolsEditorMode",
-			"Enabled": true,
-			"TargetAllowList": [
-				"Editor"
-			]
-		}
-	]
+    "FileVersion": 3,
+    "EngineAssociation": "5.4",
+    "Category": "",
+    "Description": "",
+    "Modules": [
+        {
+            "Name": "Ghriail",
+            "Type": "Runtime",
+            "LoadingPhase": "Default"
+        },
+        {
+            "Name": "PathfindingModule",
+            "Type": "Runtime",
+            "LoadingPhase": "Default"
+        },
+        {
+            "Name": "GridModule",
+            "Type": "Runtime",
+            "LoadingPhase": "Default",
+            "AdditionalDependencies": [
+                "Engine"
+            ]
+        },
+        {
+            "Name": "GameplayModule",
+            "Type": "Runtime",
+            "LoadingPhase": "Default"
+        },
+        {
+            "Name": "DebugModule",
+            "Type": "Runtime",
+            "LoadingPhase": "Default"
+        },
+        {
+            "Name": "GridMathModule",
+            "Type": "Runtime",
+            "LoadingPhase": "Default"
+        },
+        {
+            "Name": "GridTypesModule",
+            "Type": "Runtime",
+            "LoadingPhase": "Default"
+        }
+    ],
+    "Plugins": [
+        {
+            "Name": "ModelingToolsEditorMode",
+            "Enabled": true,
+            "TargetAllowList": [
+                "Editor"
+            ]
+        }
+    ]
 }

@@ -82,7 +82,7 @@ void AGrid::SetupDataForLineTrace(const int32& GridIndex)
 {
     FGridCell GridCellData;
     GridCellData.Cost = 1; // TODO cost dependant on Type
-    GridCellData.Position = Convert3DGridPositionToWorld(Convert1DIndexTo3D(GridIndex)) + FVector(CellSize / 2); // move the position of the grid to the center of the box
+    GridCellData.Position = Convert3DGridIndexToWorldPos(Convert1DIndexTo3D(GridIndex)) + FVector(CellSize / 2); // move the position of the grid to the center of the box
     PerformSingleLineTrace(GridIndex, GridCellData); // move the z to the top of the box
 
     if (GridIndex < GridCells.Num()) {
@@ -162,7 +162,7 @@ void AGrid::AddAllNeighbours()
 
 void AGrid::AddNeighbours(const int32& GridIndex)
 {
-    FVector Grid3DIndex = Convert1DIndexTo3D(GridIndex);
+    FIntVector Grid3DIndex = Convert1DIndexTo3D(GridIndex);
 
     // Loop through all possible combinations of (-1, 0, 1) for x, y, z
     // All potential combinations, total of 27 with excluding (0,0,0):
@@ -272,9 +272,9 @@ int32 AGrid::GetGridSize1D()
     return Depth * Width * Height;
 }
 
-FVector3f AGrid::GetGridSize3D()
+FIntVector AGrid::GetGridSize3D()
 {
-    return FVector3f(Depth, Width, Height);
+    return FIntVector(Depth, Width, Height);
 }
 
 FRotator AGrid::CalcRotationFromImpactNormal(const FVector& HitNormal)
@@ -361,28 +361,24 @@ TArray<FGridCell> AGrid::GetGridCells() const
     return GridCells;
 }
 
-FVector AGrid::Convert1DIndexTo3D(const int32& index) const
+FIntVector AGrid::Convert1DIndexTo3D(const int32& Grid1DIndex) const
 {
-    int32 z = index / (Depth * Width); // Height
-    int32 y = (index % (Depth * Width)) / Depth; // Width
-    int32 x = index % Depth; // Depth
-    return FVector(x, y, z);
+    return FGridMathUtils::Convert1DIndexTo3D(Grid1DIndex, Width, Depth);
 }
 
-FVector AGrid::Convert3DGridPositionToWorld(const FVector& GridPosition) const
+int32 AGrid::Convert3DIndexTo1D(const FIntVector& Grid3DIndex) const
 {
-    return (GridPosition * FVector(CellSize)) + GetActorLocation(); // first turn to 3D gird, then add offset
+    return FGridMathUtils::Convert3DIndexTo1D(Grid3DIndex, Width, Depth);
 }
 
-FVector AGrid::ConvertWorldTo3DGrid(const FVector& WorldPosition) const
+FVector AGrid::Convert3DGridIndexToWorldPos(const FIntVector& GridIndex3D) const
 {
-    FVector Grid3DPosition = (WorldPosition + GetActorLocation()) / FVector(CellSize); // first remove offset, then divide by cell size to get grid index
-    // Make sure the values are integers
-    return FVector(
-        FMath::RoundToInt(Grid3DPosition.X),
-        FMath::RoundToInt(Grid3DPosition.Y),
-        FMath::RoundToInt(Grid3DPosition.Z)
-    );
+    return FGridMathUtils::Convert3DGridIndexToWorldPos(GridIndex3D, GetActorLocation(), CellSize);
+}
+
+FIntVector AGrid::ConvertWorldPosTo3DGridIndex(const FVector& WorldPosition) const
+{
+    return FGridMathUtils::ConvertWorldPosTo3DGridIndex(WorldPosition, GetActorLocation(), CellSize);
 }
 
 /* ----------------------------- */

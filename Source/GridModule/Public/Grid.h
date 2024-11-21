@@ -15,6 +15,8 @@
 #include "GridDebugVisualiserComponent.h"
 #include "GridSpecial.h"
 
+#include "GridMathUtils.h"
+
 #include "Grid.generated.h"
 
 UCLASS()
@@ -111,7 +113,7 @@ private:
 	// Grid Calculations
 	int32 GetTopLayerStartIndex();
 	int32 GetGridSize1D();
-	FVector3f GetGridSize3D();
+	FIntVector GetGridSize3D();
 
 	// Readability Functions
 	FRotator CalcRotationFromImpactNormal(const FVector& HitNormal);
@@ -130,9 +132,10 @@ public:
 	virtual int32 GetGridSize() const override;
 	virtual float GetGridCellSize() const override;
 	virtual TArray<FGridCell> GetGridCells() const override;
-	virtual FVector Convert1DIndexTo3D(const int32& index) const override;
-	virtual FVector Convert3DGridPositionToWorld(const FVector& GridPosition) const override;
-	virtual FVector ConvertWorldTo3DGrid(const FVector& WorldPosition) const override;
+	virtual FIntVector Convert1DIndexTo3D(const int32& Grid1DIndex) const override;
+	virtual int32 Convert3DIndexTo1D(const FIntVector& Grid3DIndex) const override;
+	virtual FVector Convert3DGridIndexToWorldPos(const FIntVector& Grid3DIndex) const override;
+	virtual FIntVector ConvertWorldPosTo3DGridIndex(const FVector& WorldPosition) const override;
 
 /* ----------------------------- */
 /* ----------------------------- */
