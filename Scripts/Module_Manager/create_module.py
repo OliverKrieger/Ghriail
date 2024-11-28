@@ -24,6 +24,7 @@ def request_module_create():
     create_module_folders(module_path)
     write_build_file(module_name, module_path)
     write_module_implementation_files(module_name, module_path)
+    write_module_log_category(module_name, module_path)
     include_module_in_uproject(module_name)
     include_module_in_project_build(module_name)
 
@@ -88,6 +89,31 @@ def write_module_implementation_files(module_name:str, module_path:str):
         '}\n'
     )
     f.close()
+
+def write_module_log_category(module_name:str, module_path:str):
+    module_log_cat_h_fname:str = module_name+"_LogCategory.h"
+    module_log_cat_h_path:str = os.path.join(module_path, "Public", module_log_cat_h_fname)
+    module_log_cat_cpp_fname:str = module_name+"_LogCategory.cpp"
+    module_log_cat_cpp_path:str = os.path.join(module_path, "Private", module_log_cat_cpp_fname)
+
+    f = open(module_log_cat_h_path, "w")
+    f.write(
+        '#pragma once\n'
+        '\n'
+        '#include "CoreMinimal.h"\n'
+        '\n'
+        'DECLARE_LOG_CATEGORY_EXTERN('+module_name+'_LogCategory, Log, All);'
+    )
+    f.close()
+
+    f = open(module_log_cat_cpp_path, "w")
+    f.write(
+        '#include "'+module_log_cat_h_fname+'"\n'
+        '\n'
+        'DEFINE_LOG_CATEGORY('+module_name+'_LogCategory);'
+    )
+    f.close()
+
 
 def include_module_in_uproject(module_name:str):
     fjson:dict = load_uproject_contents()

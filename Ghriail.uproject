@@ -41,6 +41,21 @@
             "Name": "GridTypesModule",
             "Type": "Runtime",
             "LoadingPhase": "Default"
+        },
+        {
+            "Name": "PlayerModule",
+            "Type": "Runtime",
+            "LoadingPhase": "Default"
+        },
+        {
+            "Name": "NPCModule",
+            "Type": "Runtime",
+            "LoadingPhase": "Default"
+        },
+        {
+            "Name": "WFCModule",
+            "Type": "Runtime",
+            "LoadingPhase": "Default"
         }
     ],
     "Plugins": [
